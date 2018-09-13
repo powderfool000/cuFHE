@@ -39,7 +39,7 @@ targets: $(DIR_BIN)/libcufhe_cpu.so $(DIR_BIN)/libcufhe_gpu.so \
 
 ##
 all: $(targets)
-cpu: $(DIR_BIN)/libcufhe_cpu.so $(DIR_BIN)/test_api_cpu
+cpu: $(DIR_BIN)/libcufhe_cpu.so $(DIR_BIN)/test_api_cpu $(DIR_BIN)/test_adder
 gpu: $(DIR_BIN)/libcufhe_gpu.so $(DIR_BIN)/test_api_gpu
 python_cpu: $(DIR_BIN)/libcufhe_cpu.so $(DIR_PY)/fhepy_cpu.so
 python_gpu: $(DIR_BIN)/libcufhe_gpu.so $(DIR_PY)/fhepy_gpu.so
@@ -55,6 +55,15 @@ $(DIR_BIN)/test_api_cpu: $(DIR_OBJ)/test/test_api_cpu.o
 	$(CC) $(FLAGS) -o $@ $(DIR_OBJ)/test/test_api_cpu.o -L$(DIR_BIN) -lcufhe_cpu
 
 $(DIR_OBJ)/test/test_api_cpu.o: test/test_api_cpu.cc
+	$(dir_guard)
+	$(CC) $(FLAGS) $(INC) -M -o $(@:%.o=%.d) $<
+	$(CC) $(FLAGS) $(INC) -c -o $@ $<
+
+$(DIR_BIN)/test_adder: $(DIR_OBJ)/test/test_adder.o
+	$(dir_guard)
+	$(CC) $(FLAGS) -o $@ $(DIR_OBJ)/test/test_adder.o -L$(DIR_BIN) -lcufhe_cpu
+
+$(DIR_OBJ)/test/test_adder.o: test/test_adder.cc
 	$(dir_guard)
 	$(CC) $(FLAGS) $(INC) -M -o $(@:%.o=%.d) $<
 	$(CC) $(FLAGS) $(INC) -c -o $@ $<
