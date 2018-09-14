@@ -44,10 +44,10 @@ gpu: $(DIR_BIN)/libcufhe_gpu.so $(DIR_BIN)/test_api_gpu
 python_cpu: $(DIR_BIN)/libcufhe_cpu.so $(DIR_PY)/fhepy_cpu.so
 python_gpu: $(DIR_BIN)/libcufhe_gpu.so $(DIR_PY)/fhepy_gpu.so
 clean:
-	rm -r $(DIR_BIN) $(DIR_OBJ)
+	rm -rf $(DIR_BIN) $(DIR_OBJ)
 python_clean:
-	rm $(DIR_PY)/*.o
-	rm $(DIR_PY)/*.so
+	rm -f $(DIR_PY)/*.o
+	rm -f $(DIR_PY)/*.so
 
 ##
 $(DIR_BIN)/test_api_cpu: $(DIR_OBJ)/test/test_api_cpu.o

@@ -3,3 +3,6 @@ build/**
 bin/**
 data/**
 **/*.txt
+**/*.pyc
+**/*.o
+**/*.so
