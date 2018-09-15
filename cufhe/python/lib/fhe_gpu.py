@@ -83,6 +83,17 @@ def Decrypt(ctxt, prikey):
 def SetSeed():
     fhe.SetSeed(int(time.time()))
 
+def Synchronize():
+    fhe.Synchronize()
+
+
+class Stream:
+    def __init__(self):
+        self.st = fhe.Stream()
+
+    def Create():
+        self.st.Create()
+
 
 class Ctxt:
     def __init__(self, pubkey=None):
@@ -98,38 +109,38 @@ class Ctxt:
 
     def __and__(self, other):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
+        Synchronize()
         fhe.AND(result.ctxt_, self.ctxt_, other.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
         return result
 
     def __xor__(self, other):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
+        Synchronize()
         fhe.XOR(result.ctxt_, self.ctxt_, other.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
         return result
 
     def __or__(self, other):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
+        Synchronize()
         fhe.OR(result.ctxt_, self.ctxt_, other.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
         return result
 
     def __invert__(self):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
+        Synchronize()
         fhe.NOT(result.ctxt_, self.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
         return result
 
 
@@ -148,48 +159,48 @@ class CtxtList:
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
             fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+        Synchronize()
         return result
 
     def __xor__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
             fhe.XOR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+        Synchronize()
         return result
 
     def __or__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
             fhe.OR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+        Synchronize()
         return result
 
     def __invert__(self):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
             fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+        Synchronize()
         return result
 
 
@@ -197,9 +208,9 @@ class CtxtList:
         k = len(self.ctxts_)
         st = []
         for i in range(3*k):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
 
         ksa_p = CtxtList(k, self.pubkey_)
         ksa_g = CtxtList(k, self.pubkey_)
@@ -210,7 +221,7 @@ class CtxtList:
             fhe.AND(ksa_g.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i])
             fhe.XOR(ksa_p.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+1])
             fhe.XOR(ksa_s.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+2])
-	fhe.Synchronize()
+	Synchronize()
 
         begin = 0
         step = 1
@@ -220,16 +231,16 @@ class CtxtList:
                 ctxt = ksa_p.ctxts_[i].ctxt_
 	        fhe.AND(ksa_p.ctxts_[i].ctxt_, ctxt, ksa_p.ctxts_[i-step].ctxt_, st[2*id])
 	        fhe.AND(ksa_c.ctxts_[i].ctxt_, ctxt, ksa_g.ctxts_[i-step].ctxt_, st[2*id+1])
-            fhe.Synchronize()
+            Synchronize()
 
 	    for i in range(begin+step, k):
                 id = i - begin - step
 	        fhe.OR(ksa_g.ctxts_[i].ctxt_, ksa_c.ctxts_[i].ctxt_, ksa_g.ctxts_[i].ctxt_, st[id])
-            fhe.Synchronize()
+            Synchronize()
             step += 1
             begin += 1
 
         for i in range(1,k):
              fhe.XOR(ksa_s.ctxts_[i].ctxt_, ksa_s.ctxts_[i].ctxt_, ksa_g.ctxts_[i-1].ctxt_, st[i])
-        fhe.Synchronize()
+        Synchronize()
         return ksa_s
