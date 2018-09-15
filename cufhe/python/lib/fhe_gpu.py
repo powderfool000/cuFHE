@@ -89,10 +89,10 @@ def Synchronize():
 
 class Stream:
     def __init__(self):
-        self.st = fhe.Stream()
+        self.stream = fhe.Stream()
 
-    def Create():
-        self.st.Create()
+    def Create(self):
+        self.stream.Create()
 
 
 class Ctxt:
@@ -112,7 +112,7 @@ class Ctxt:
         st = Stream()
         st.Create()
         Synchronize()
-        fhe.AND(result.ctxt_, self.ctxt_, other.ctxt_, st)
+        fhe.AND(result.ctxt_, self.ctxt_, other.ctxt_, st.stream)
         Synchronize()
         return result
 
@@ -121,7 +121,7 @@ class Ctxt:
         st = Stream()
         st.Create()
         Synchronize()
-        fhe.XOR(result.ctxt_, self.ctxt_, other.ctxt_, st)
+        fhe.XOR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream)
         Synchronize()
         return result
 
@@ -130,7 +130,7 @@ class Ctxt:
         st = Stream()
         st.Create()
         Synchronize()
-        fhe.OR(result.ctxt_, self.ctxt_, other.ctxt_, st)
+        fhe.OR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream)
         Synchronize()
         return result
 
@@ -139,7 +139,7 @@ class Ctxt:
         st = Stream()
         st.Create()
         Synchronize()
-        fhe.NOT(result.ctxt_, self.ctxt_, st)
+        fhe.NOT(result.ctxt_, self.ctxt_, st.stream)
         Synchronize()
         return result
 
@@ -163,7 +163,7 @@ class CtxtList:
             st[i].Create()
         Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
+            fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream)
         Synchronize()
         return result
 
@@ -175,7 +175,7 @@ class CtxtList:
             st[i].Create()
         Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.XOR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
+            fhe.XOR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream)
         Synchronize()
         return result
 
@@ -187,7 +187,7 @@ class CtxtList:
             st[i].Create()
         Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.OR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
+            fhe.OR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream)
         Synchronize()
         return result
 
@@ -199,7 +199,7 @@ class CtxtList:
             st[i].Create()
         Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i])
+            fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i].stream)
         Synchronize()
         return result
 
@@ -218,9 +218,9 @@ class CtxtList:
 	ksa_s = CtxtList(k, self.pubkey_)
 
         for i in range(k):
-            fhe.AND(ksa_g.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i])
-            fhe.XOR(ksa_p.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+1])
-            fhe.XOR(ksa_s.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+2])
+            fhe.AND(ksa_g.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i].stream)
+            fhe.XOR(ksa_p.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+1].stream)
+            fhe.XOR(ksa_s.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+2].stream)
 	Synchronize()
 
         begin = 0
@@ -229,18 +229,18 @@ class CtxtList:
 	    for i in range(begin+step, k):
                 id = i - begin - step
                 ctxt = ksa_p.ctxts_[i].ctxt_
-	        fhe.AND(ksa_p.ctxts_[i].ctxt_, ctxt, ksa_p.ctxts_[i-step].ctxt_, st[2*id])
-	        fhe.AND(ksa_c.ctxts_[i].ctxt_, ctxt, ksa_g.ctxts_[i-step].ctxt_, st[2*id+1])
+	        fhe.AND(ksa_p.ctxts_[i].ctxt_, ctxt, ksa_p.ctxts_[i-step].ctxt_, st[2*id].stream)
+	        fhe.AND(ksa_c.ctxts_[i].ctxt_, ctxt, ksa_g.ctxts_[i-step].ctxt_, st[2*id+1].stream)
             Synchronize()
 
 	    for i in range(begin+step, k):
                 id = i - begin - step
-	        fhe.OR(ksa_g.ctxts_[i].ctxt_, ksa_c.ctxts_[i].ctxt_, ksa_g.ctxts_[i].ctxt_, st[id])
+	        fhe.OR(ksa_g.ctxts_[i].ctxt_, ksa_c.ctxts_[i].ctxt_, ksa_g.ctxts_[i].ctxt_, st[id].stream)
             Synchronize()
             step += 1
             begin += 1
 
         for i in range(1,k):
-             fhe.XOR(ksa_s.ctxts_[i].ctxt_, ksa_s.ctxts_[i].ctxt_, ksa_g.ctxts_[i-1].ctxt_, st[i])
+             fhe.XOR(ksa_s.ctxts_[i].ctxt_, ksa_s.ctxts_[i].ctxt_, ksa_g.ctxts_[i-1].ctxt_, st[i].stream)
         Synchronize()
         return ksa_s
