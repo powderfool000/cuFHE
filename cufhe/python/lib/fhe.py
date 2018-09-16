@@ -76,7 +76,7 @@ def Encrypt(ptxt, prikey, count=1, pubkey=None):
         if count == 1:
             ptxt.message = msg;
             ctxt = Ctxt(pubkey)
-    	    fhe.Encrypt(ctxt.ctxt_, ptxt, prikey)
+            fhe.Encrypt(ctxt.ctxt_, ptxt, prikey)
             return ctxt
 
         msg_bin = bin(msg)[2:].zfill(count)
@@ -214,6 +214,35 @@ class Ctxt:
         Synchronize()
         return result
 
+    def __eq__(self, other):
+        result = Ctxt(self.pubkey_)
+        st = Stream()
+        st.Create()
+        Synchronize()
+        XNOR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        Synchronize()
+        return result
+
+    def __ne__(self, other):
+        result = Ctxt(self.pubkey_)
+        st = Stream()
+        st.Create()
+        Synchronize()
+        XOR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        Synchronize()
+        return result
+
+    def __lt__(self, other):
+        return ~self & other
+
+    def __le__(self, other):
+        return ~self | other
+
+    def __gt__(self, other):
+        return self & ~other
+
+    def __ge__(self, other):
+        return self | ~other
 
 
 class CtxtList:

@@ -21,13 +21,14 @@
 ################################################################################
 
 import lib.fhe as fhe
+import operator
 import time
 import random
 import timeit
 
 inputs = [(0, 0), (0, 1), (1, 0), (1, 1)]
 circuits = ['__and__', '__or__', '__xor__', '__lt__', '__le__', '__eq__',
-			'__ne__', '__gt__', '__ge__']
+            '__ne__', '__gt__', '__ge__']
 
 # Rand Seeds
 random.seed()
@@ -43,13 +44,12 @@ for circuit in circuits:
 	for i in inputs:
 		m1, m2 = i
 		c1, c2 = fhe.Encrypt(m1, prikey), fhe.Encrypt(m2, prikey)
-		func = getattr(c1, circuit)
+		func = getattr(operator, circuit)
 		start_time = timeit.default_timer()
-		c = func(c2)
+		c = func(c1, c2)
 		elapsed_time = timeit.default_timer() - start_time
 		result = c.Decrypt(prikey)
-		func = getattr(i[0], circuit)
-		passed = "PASS" if (result == func(i[1])) else "FAIL"
+		passed = "PASS" if (result == func(i[0], i[1])) else "FAIL"
 		print "Test " + circuit + ": " + passed
 		print "In " + str(elapsed_time) + " seconds"
 
