@@ -145,9 +145,9 @@ def XNOR(result, input1, input2, stream=None, pubkey=None):
     else:
         fhe.XNOR(result, input1, input2, pubkey)
 
-def NOT(result, input1):
+def NOT(result, input1, stream=None):
     if use_gpu:
-        fhe.NOT(result, input1)
+        fhe.NOT(result, input1, stream)
     else:
         fhe.NOT(result, input1)
 
@@ -210,7 +210,7 @@ class Ctxt:
         st = Stream()
         st.Create()
         Synchronize()
-        NOT(result.ctxt_, self.ctxt_)
+        NOT(result.ctxt_, self.ctxt_, st.stream)
         Synchronize()
         return result
 
