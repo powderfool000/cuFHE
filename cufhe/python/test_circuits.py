@@ -25,6 +25,10 @@ import time
 import random
 import timeit
 
+inputs = [(0, 0), (0, 1), (1, 0), (1, 1)]
+circuits = ['__and__', '__or__', '__xor__', '__lt__', '__le__', '__eq__',
+			'__ne__', '__gt__', '__ge__']
+
 # Rand Seeds
 random.seed()
 fhe.SetSeed()
@@ -34,6 +38,20 @@ pubkey, prikey = fhe.KeyGen()
 
 #fhe.StoreKeys(pubkey, prikey)
 fhe.Init(pubkey)
+
+for circuit in circuits:
+	for i in inputs:
+		m1, m2 = i
+		c1, c2 = fhe.Encrypt(m1, prikey), fhe.Encrypt(m2, prikey)
+		func = getattr(c1, circuit)
+		start_time = timeit.default_timer()
+		c = func(c2)
+		elapsed_time = timeit.default_timer() - start_time
+		result = c.Decrypt(prikey)
+		func = getattr(i[0], circuit)
+		passed = "PASS" if (result == func(i[1])) else "FAIL"
+		print "Test " + circuit + ": " + passed
+		print "In " + str(elapsed_time) + " seconds"
 
 # Encryption & Decryption
 msg = random.randint(0,1)
@@ -70,13 +88,60 @@ c = c1 | c2
 result = c.Decrypt(prikey)
 print m1, " | " , m2, " = ", result
 
+# NOT
+m1 = random.randint(0,1)
+c1 = fhe.Encrypt(m1, prikey)
+c = ~c1
+result = c.Decrypt(prikey)
+print "~", m1, " = ", result
+
+# COMPARE
+m1, m2 = random.randint(0,1), random.randint(0,1)
+c1 = fhe.Encrypt(m1, prikey)
+c2 = fhe.Encrypt(m2, prikey)
+c = c1 < c2
+result = c.Decrypt(prikey)
+print m1, " < " , m2, " = ", result
+
+m1, m2 = random.randint(0,1), random.randint(0,1)
+c1 = fhe.Encrypt(m1, prikey)
+c2 = fhe.Encrypt(m2, prikey)
+c = c1 <= c2
+result = c.Decrypt(prikey)
+print m1, " <= " , m2, " = ", result
+
+m1, m2 = random.randint(0,1), random.randint(0,1)
+c1 = fhe.Encrypt(m1, prikey)
+c2 = fhe.Encrypt(m2, prikey)
+c = c1 == c2
+result = c.Decrypt(prikey)
+print m1, " == " , m2, " = ", result
+
+m1, m2 = random.randint(0,1), random.randint(0,1)
+c1 = fhe.Encrypt(m1, prikey)
+c2 = fhe.Encrypt(m2, prikey)
+c = c1 != c2
+result = c.Decrypt(prikey)
+print m1, " != " , m2, " = ", result
+
+m1, m2 = random.randint(0,1), random.randint(0,1)
+c1 = fhe.Encrypt(m1, prikey)
+c2 = fhe.Encrypt(m2, prikey)
+c = c1 > c2
+result = c.Decrypt(prikey)
+print m1, " > " , m2, " = ", result
+
+m1, m2 = random.randint(0,1), random.randint(0,1)
+c1 = fhe.Encrypt(m1, prikey)
+c2 = fhe.Encrypt(m2, prikey)
+c = c1 >= c2
+result = c.Decrypt(prikey)
+print m1, " >= " , m2, " = ", result
+
 # Multibit Evaluations
 
 # Bitwise AND
-if fhe.UseGPU():
-	length = 30
-else:
-	length = 5
+length = 4
 m1, m2 = random.getrandbits(length), random.getrandbits(length)
 c1 = fhe.Encrypt(m1, prikey, length)
 c2 = fhe.Encrypt(m2, prikey, length)
@@ -85,19 +150,4 @@ c = c1 & c2
 elapsed = timeit.default_timer() - start_time
 result = c.Decrypt(prikey)
 print m1, " & " , m2, " = ", result
-print elapsed, " sec"
-
-# ADDITION
-if fhe.UseGPU:
-	length = 30
-else:
-	length = 3
-m1, m2 = random.getrandbits(length-1), random.getrandbits(length-1)
-c1 = fhe.Encrypt(m1, prikey, length)
-c2 = fhe.Encrypt(m2, prikey, length)
-start_time = timeit.default_timer()
-c = c1 + c2
-elapsed = timeit.default_timer() - start_time
-result = c.Decrypt(prikey)
-print m1, " + " , m2, " = ", result
 print elapsed, " sec"

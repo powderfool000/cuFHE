@@ -25,7 +25,7 @@
 # All the function prototypes are exactly as in Cuda library.
 # This gives more flexibility to the designer, if they want full
 # control over Cuda streams.
-# If you want a simple Python interface, check "test_circuits_gpu.py" out.
+# If you want a simple Python interface, check "test_circuits.py" out.
 
 import lib.fhepy_gpu as fhe
 import time

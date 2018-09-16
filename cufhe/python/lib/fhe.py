@@ -1,6 +1,23 @@
-import lib.fhepy_gpu as fhe
+# file: fhe.py
+#
+# description: Test either the CPU or GPU implementation of cuFHE
+#
+# note: This file depends on at least one of either fhepy_gpu.so or fhepy_cpu.so
+#
+
+# Attempt to import GPU module, fallback to CPU module
+try:
+    import lib.fhepy_gpu as fhe
+    use_gpu = True
+except:
+    import lib.fhepy_cpu as fhe
+    use_gpu = False
+
 import time
 import timeit
+
+def UseGPU():
+    return use_gpu
 
 def LoadPubKey(pubfile="pubkey.txt"):
     pubkey = fhe.PubKey()
@@ -42,7 +59,10 @@ def KeyGen():
     return PubKeyGen(prikey), prikey
 
 def Init(pubkey):
-    fhe.Initialize(pubkey)
+    if use_gpu:
+        fhe.Initialize(pubkey)
+    else:
+        pass
 
 def PtxtMod():
     return fhe.Ptxt().PtxtSpace
@@ -83,6 +103,68 @@ def Decrypt(ctxt, prikey):
 def SetSeed():
     fhe.SetSeed(int(time.time()))
 
+def Synchronize():
+    if use_gpu:
+        fhe.Synchronize()
+    else:
+        pass
+
+def AND(result, input1, input2, stream=None, pubkey=None):
+    if use_gpu:
+        fhe.AND(result, input1, input2, stream)
+    else:
+        fhe.AND(result, input1, input2, pubkey)
+
+def NAND(result, input1, input2, stream=None, pubkey=None):
+    if use_gpu:
+        fhe.NAND(result, input1, input2, stream)
+    else:
+        fhe.NAND(result, input1, input2, stream)
+
+def OR(result, input1, input2, stream=None, pubkey=None):
+    if use_gpu:
+        fhe.OR(result, input1, input2, stream)
+    else:
+        fhe.OR(result, input1, input2, pubkey)
+
+def NOR(result, input1, input2, stream=None, pubkey=None):
+    if use_gpu:
+        fhe.NOR(result, input1, input2, stream)
+    else:
+        fhe.NOR(result, input1, input2, pubkey)
+
+def XOR(result, input1, input2, stream=None, pubkey=None):
+    if use_gpu:
+        fhe.XOR(result, input1, input2, stream)
+    else:
+        fhe.XOR(result, input1, input2, pubkey)
+
+def XNOR(result, input1, input2, stream=None, pubkey=None):
+    if use_gpu:
+        fhe.XNOR(result, input1, input2, stream)
+    else:
+        fhe.XNOR(result, input1, input2, pubkey)
+
+def NOT(result, input1):
+    if use_gpu:
+        fhe.NOT(result, input1)
+    else:
+        fhe.NOT(result, input1)
+
+
+class Stream:
+    def __init__(self):
+        if use_gpu:
+            self.stream = fhe.Stream()
+        else:
+            self.stream = None
+
+    def Create(self):
+        if use_gpu:
+            self.stream.Create()
+        else:
+            pass
+
 
 class Ctxt:
     def __init__(self, pubkey=None):
@@ -98,38 +180,38 @@ class Ctxt:
 
     def __and__(self, other):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
-        fhe.AND(result.ctxt_, self.ctxt_, other.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
+        AND(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        Synchronize()
         return result
 
     def __xor__(self, other):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
-        fhe.XOR(result.ctxt_, self.ctxt_, other.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
+        XOR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        Synchronize()
         return result
 
     def __or__(self, other):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
-        fhe.OR(result.ctxt_, self.ctxt_, other.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
+        OR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        Synchronize()
         return result
 
     def __invert__(self):
         result = Ctxt(self.pubkey_)
-        st = fhe.Stream()
+        st = Stream()
         st.Create()
-        fhe.Synchronize()
-        fhe.NOT(result.ctxt_, self.ctxt_, st)
-        fhe.Synchronize()
+        Synchronize()
+        NOT(result.ctxt_, self.ctxt_)
+        Synchronize()
         return result
 
 
@@ -148,48 +230,48 @@ class CtxtList:
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+            AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+        Synchronize()
         return result
 
     def __xor__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.XOR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+            XOR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+        Synchronize()
         return result
 
     def __or__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.OR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+            OR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+        Synchronize()
         return result
 
     def __invert__(self):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = []
         for i in range(len(self.ctxts_)):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
         for i in range(len(self.ctxts_)):
-            fhe.AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i])
-        fhe.Synchronize()
+            AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+        Synchronize()
         return result
 
 
@@ -197,9 +279,9 @@ class CtxtList:
         k = len(self.ctxts_)
         st = []
         for i in range(3*k):
-            st.append(fhe.Stream())
+            st.append(Stream())
             st[i].Create()
-        fhe.Synchronize()
+        Synchronize()
 
         ksa_p = CtxtList(k, self.pubkey_)
         ksa_g = CtxtList(k, self.pubkey_)
@@ -207,10 +289,10 @@ class CtxtList:
 	ksa_s = CtxtList(k, self.pubkey_)
 
         for i in range(k):
-            fhe.AND(ksa_g.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i])
-            fhe.XOR(ksa_p.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+1])
-            fhe.XOR(ksa_s.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+2])
-	fhe.Synchronize()
+            AND(ksa_g.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i].stream, self.pubkey_)
+            XOR(ksa_p.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+1].stream, self.pubkey_)
+            XOR(ksa_s.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+2].stream, self.pubkey_)
+	Synchronize()
 
         begin = 0
         step = 1
@@ -218,18 +300,18 @@ class CtxtList:
 	    for i in range(begin+step, k):
                 id = i - begin - step
                 ctxt = ksa_p.ctxts_[i].ctxt_
-	        fhe.AND(ksa_p.ctxts_[i].ctxt_, ctxt, ksa_p.ctxts_[i-step].ctxt_, st[2*id])
-	        fhe.AND(ksa_c.ctxts_[i].ctxt_, ctxt, ksa_g.ctxts_[i-step].ctxt_, st[2*id+1])
-            fhe.Synchronize()
+	        AND(ksa_p.ctxts_[i].ctxt_, ctxt, ksa_p.ctxts_[i-step].ctxt_, st[2*id].stream, self.pubkey_)
+	        AND(ksa_c.ctxts_[i].ctxt_, ctxt, ksa_g.ctxts_[i-step].ctxt_, st[2*id+1].stream, self.pubkey_)
+            Synchronize()
 
 	    for i in range(begin+step, k):
                 id = i - begin - step
-	        fhe.OR(ksa_g.ctxts_[i].ctxt_, ksa_c.ctxts_[i].ctxt_, ksa_g.ctxts_[i].ctxt_, st[id])
-            fhe.Synchronize()
+	        OR(ksa_g.ctxts_[i].ctxt_, ksa_c.ctxts_[i].ctxt_, ksa_g.ctxts_[i].ctxt_, st[id].stream, self.pubkey_)
+            Synchronize()
             step += 1
             begin += 1
 
         for i in range(1,k):
-             fhe.XOR(ksa_s.ctxts_[i].ctxt_, ksa_s.ctxts_[i].ctxt_, ksa_g.ctxts_[i-1].ctxt_, st[i])
-        fhe.Synchronize()
+             XOR(ksa_s.ctxts_[i].ctxt_, ksa_s.ctxts_[i].ctxt_, ksa_g.ctxts_[i-1].ctxt_, st[i].stream, self.pubkey_)
+        Synchronize()
         return ksa_s
