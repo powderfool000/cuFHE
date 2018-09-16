@@ -1,3 +1,10 @@
+# file: fhe.py
+#
+# description: Test either the CPU or GPU implementation of cuFHE
+#
+# note: This file depends on at least one of either fhepy_gpu.so or fhepy_cpu.so
+#
+
 # Attempt to import GPU module, fallback to CPU module
 try:
     import lib.fhepy_gpu as fhe
@@ -8,6 +15,9 @@ except:
 
 import time
 import timeit
+
+def UseGPU():
+    return use_gpu
 
 def LoadPubKey(pubfile="pubkey.txt"):
     pubkey = fhe.PubKey()
@@ -135,11 +145,11 @@ def XNOR(result, input1, input2, stream=None, pubkey=None):
     else:
         fhe.XNOR(result, input1, input2, pubkey)
 
-def NOT(result, input1, stream=None, pubkey=None):
+def NOT(result, input1):
     if use_gpu:
-        fhe.NOT(result, input1, stream)
+        fhe.NOT(result, input1)
     else:
-        fhe.NOT(result, input1, pubkey)
+        fhe.NOT(result, input1)
 
 
 class Stream:
@@ -200,7 +210,7 @@ class Ctxt:
         st = Stream()
         st.Create()
         Synchronize()
-        NOT(result.ctxt_, self.ctxt_, st.stream, self.pubkey_)
+        NOT(result.ctxt_, self.ctxt_)
         Synchronize()
         return result
 

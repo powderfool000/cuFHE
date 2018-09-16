@@ -20,7 +20,7 @@
 # DEALINGS IN THE SOFTWARE.
 ################################################################################
 
-import lib.fhe_cpu as fhe
+import lib.fhe as fhe
 
 # Keys
 pubkey, prikey = fhe.KeyGen()

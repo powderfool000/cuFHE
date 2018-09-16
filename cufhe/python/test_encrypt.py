@@ -21,7 +21,7 @@
 ################################################################################
 
 #import lib.fhe_gpu as fhe
-import lib.fhe_cpu as fhe
+import lib.fhe as fhe
 import random
 
 # Keys

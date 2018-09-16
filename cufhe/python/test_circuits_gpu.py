@@ -20,7 +20,7 @@
 # DEALINGS IN THE SOFTWARE.
 ################################################################################
 
-import lib.fhe_gpu as fhe
+import lib.fhe as fhe
 import time
 import random
 import timeit
@@ -73,7 +73,10 @@ print m1, " | " , m2, " = ", result
 # Multibit Evaluations
 
 # Bitwise AND
-length = 30
+if fhe.UseGPU():
+	length = 30
+else:
+	length = 5
 m1, m2 = random.getrandbits(length), random.getrandbits(length)
 c1 = fhe.Encrypt(m1, prikey, length)
 c2 = fhe.Encrypt(m2, prikey, length)
@@ -85,7 +88,10 @@ print m1, " & " , m2, " = ", result
 print elapsed, " sec"
 
 # ADDITION
-length = 30
+if fhe.UseGPU:
+	length = 30
+else:
+	length = 3
 m1, m2 = random.getrandbits(length-1), random.getrandbits(length-1)
 c1 = fhe.Encrypt(m1, prikey, length)
 c2 = fhe.Encrypt(m2, prikey, length)
