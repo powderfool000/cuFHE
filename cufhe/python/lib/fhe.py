@@ -304,7 +304,7 @@ class CtxtList:
             AND(z.ctxts_[i-1].ctxt_, x.ctxts_[i].ctxt_, c.ctxts_[i-1].ctxt_, st[0], self.pubkey_)
             XOR(r.ctxts_[i].ctxt_, x.ctxts_[i].ctxt_, c.ctxts_[i-1].ctxt_, st[1], self.pubkey_)
             Synchronize()
-            OR(c.ctxts_[i].ctxt_, c.ctxts_[i-1].ctxt_, y.ctxts_[i].ctxt_, st[0], self.pubkey_)
+            OR(c.ctxts_[i].ctxt_, z.ctxts_[i-1].ctxt_, y.ctxts_[i].ctxt_, st[0], self.pubkey_)
             Synchronize()
         return r
 
