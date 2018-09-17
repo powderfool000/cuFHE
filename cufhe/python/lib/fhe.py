@@ -165,6 +165,8 @@ class Stream:
         else:
             pass
 
+        return self.stream
+
 
 class Ctxt:
     def __init__(self, pubkey=None):
@@ -180,55 +182,49 @@ class Ctxt:
 
     def __and__(self, other):
         result = Ctxt(self.pubkey_)
-        st = Stream()
-        st.Create()
+        st = Stream().Create()
         Synchronize()
-        AND(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        AND(result.ctxt_, self.ctxt_, other.ctxt_, st, self.pubkey_)
         Synchronize()
         return result
 
     def __xor__(self, other):
         result = Ctxt(self.pubkey_)
-        st = Stream()
-        st.Create()
+        st = Stream().Create()
         Synchronize()
-        XOR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        XOR(result.ctxt_, self.ctxt_, other.ctxt_, st, self.pubkey_)
         Synchronize()
         return result
 
     def __or__(self, other):
         result = Ctxt(self.pubkey_)
-        st = Stream()
-        st.Create()
+        st = Stream().Create()
         Synchronize()
-        OR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        OR(result.ctxt_, self.ctxt_, other.ctxt_, st, self.pubkey_)
         Synchronize()
         return result
 
     def __invert__(self):
         result = Ctxt(self.pubkey_)
-        st = Stream()
-        st.Create()
+        st = Stream().Create()
         Synchronize()
-        NOT(result.ctxt_, self.ctxt_, st.stream)
+        NOT(result.ctxt_, self.ctxt_, st)
         Synchronize()
         return result
 
     def __eq__(self, other):
         result = Ctxt(self.pubkey_)
-        st = Stream()
-        st.Create()
+        st = Stream().Create()
         Synchronize()
-        XNOR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        XNOR(result.ctxt_, self.ctxt_, other.ctxt_, st, self.pubkey_)
         Synchronize()
         return result
 
     def __ne__(self, other):
         result = Ctxt(self.pubkey_)
-        st = Stream()
-        st.Create()
+        st = Stream().Create()
         Synchronize()
-        XOR(result.ctxt_, self.ctxt_, other.ctxt_, st.stream, self.pubkey_)
+        XOR(result.ctxt_, self.ctxt_, other.ctxt_, st, self.pubkey_)
         Synchronize()
         return result
 
@@ -247,9 +243,7 @@ class Ctxt:
 
 class CtxtList:
     def __init__(self, length=0, pubkey=None):
-        self.ctxts_ = []
-        for i in range(length):
-            self.ctxts_.append(Ctxt(pubkey))
+        self.ctxts_ = [Ctxt(pubkey) for i in range(length)]
         self.pubkey_ = pubkey
 
     def Decrypt(self, prikey):
@@ -257,90 +251,101 @@ class CtxtList:
 
     def __and__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
-        st = []
-        for i in range(len(self.ctxts_)):
-            st.append(Stream())
-            st[i].Create()
+        st = [Stream().Create() for i in range(len(self.ctxts_))]
         Synchronize()
         for i in range(len(self.ctxts_)):
-            AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+            AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i], self.pubkey_)
         Synchronize()
         return result
 
     def __xor__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
-        st = []
-        for i in range(len(self.ctxts_)):
-            st.append(Stream())
-            st[i].Create()
+        st = [Stream().Create() for i in range(len(self.ctxts_))]
         Synchronize()
         for i in range(len(self.ctxts_)):
-            XOR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+            XOR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i], self.pubkey_)
         Synchronize()
         return result
 
     def __or__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
-        st = []
-        for i in range(len(self.ctxts_)):
-            st.append(Stream())
-            st[i].Create()
+        st = [Stream().Create() for i in range(len(self.ctxts_))]
         Synchronize()
         for i in range(len(self.ctxts_)):
-            OR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+            OR(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[i], self.pubkey_)
         Synchronize()
         return result
 
     def __invert__(self):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
-        st = []
-        for i in range(len(self.ctxts_)):
-            st.append(Stream())
-            st[i].Create()
+        st = [Stream().Create() for i in range(len(self.ctxts_))]
         Synchronize()
         for i in range(len(self.ctxts_)):
-            AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i].stream, self.pubkey_)
+            AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i], self.pubkey_)
         Synchronize()
         return result
 
-
+    # ripple carry adder
     def __add__(self, other):
-        k = len(self.ctxts_)
-        st = []
-        for i in range(3*k):
-            st.append(Stream())
-            st[i].Create()
+        x = CtxtList(len(self.ctxts_), self.pubkey_)    # temporaries
+        y = CtxtList(len(self.ctxts_), self.pubkey_)
+        z = CtxtList(len(self.ctxts_), self.pubkey_)
+        c = CtxtList(len(self.ctxts_), self.pubkey_)    # carry
+        r = CtxtList(len(self.ctxts_), self.pubkey_)    # result
+        st = [Stream().Create() for i in range(2*len(self.ctxts_))]
         Synchronize()
-
-        ksa_p = CtxtList(k, self.pubkey_)
-        ksa_g = CtxtList(k, self.pubkey_)
-	ksa_c = CtxtList(k, self.pubkey_)
-	ksa_s = CtxtList(k, self.pubkey_)
-
-        for i in range(k):
-            AND(ksa_g.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i].stream, self.pubkey_)
-            XOR(ksa_p.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+1].stream, self.pubkey_)
-            XOR(ksa_s.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+2].stream, self.pubkey_)
-	Synchronize()
-
-        begin = 0
-        step = 1
-	while begin+step < k:
-	    for i in range(begin+step, k):
-                id = i - begin - step
-                ctxt = ksa_p.ctxts_[i].ctxt_
-	        AND(ksa_p.ctxts_[i].ctxt_, ctxt, ksa_p.ctxts_[i-step].ctxt_, st[2*id].stream, self.pubkey_)
-	        AND(ksa_c.ctxts_[i].ctxt_, ctxt, ksa_g.ctxts_[i-step].ctxt_, st[2*id+1].stream, self.pubkey_)
-            Synchronize()
-
-	    for i in range(begin+step, k):
-                id = i - begin - step
-	        OR(ksa_g.ctxts_[i].ctxt_, ksa_c.ctxts_[i].ctxt_, ksa_g.ctxts_[i].ctxt_, st[id].stream, self.pubkey_)
-            Synchronize()
-            step += 1
-            begin += 1
-
-        for i in range(1,k):
-             XOR(ksa_s.ctxts_[i].ctxt_, ksa_s.ctxts_[i].ctxt_, ksa_g.ctxts_[i-1].ctxt_, st[i].stream, self.pubkey_)
+        XOR(r.ctxts_[0].ctxt_, self.ctxts_[0].ctxt_, other.ctxts_[0].ctxt_, st[0], self.pubkey_)
+        AND(c.ctxts_[0].ctxt_, self.ctxts_[0].ctxt_, other.ctxts_[0].ctxt_, st[1], self.pubkey_)
+        for i in range(1, len(self.ctxts_)):
+            XOR(x.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[2*i], self.pubkey_)
+            AND(y.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[2*i+1], self.pubkey_)
         Synchronize()
-        return ksa_s
+        for i in range(1, len(self.ctxts_)):
+            AND(z.ctxts_[i-1].ctxt_, x.ctxts_[i].ctxt_, c.ctxts_[i-1].ctxt_, st[0], self.pubkey_)
+            XOR(r.ctxts_[i].ctxt_, x.ctxts_[i].ctxt_, c.ctxts_[i-1].ctxt_, st[1], self.pubkey_)
+            Synchronize()
+            OR(c.ctxts_[i].ctxt_, c.ctxts_[i-1].ctxt_, y.ctxts_[i].ctxt_, st[0], self.pubkey_)
+            Synchronize()
+        return r
+
+
+ #    def __add__(self, other):
+ #        k = len(self.ctxts_)
+ #        st = []
+ #        for i in range(3*k):
+ #            st.append(Stream())
+ #            st[i].Create()
+ #        Synchronize()
+
+ #        ksa_p = CtxtList(k, self.pubkey_)
+ #        ksa_g = CtxtList(k, self.pubkey_)
+	# ksa_c = CtxtList(k, self.pubkey_)
+	# ksa_s = CtxtList(k, self.pubkey_)
+
+ #        for i in range(k):
+ #            AND(ksa_g.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i].stream, self.pubkey_)
+ #            XOR(ksa_p.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+1].stream, self.pubkey_)
+ #            XOR(ksa_s.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, other.ctxts_[i].ctxt_, st[3*i+2].stream, self.pubkey_)
+	# Synchronize()
+
+ #        begin = 0
+ #        step = 1
+	# while begin+step < k:
+	#     for i in range(begin+step, k):
+ #                id = i - begin - step
+ #                ctxt = ksa_p.ctxts_[i].ctxt_
+	#         AND(ksa_p.ctxts_[i].ctxt_, ctxt, ksa_p.ctxts_[i-step].ctxt_, st[2*id].stream, self.pubkey_)
+	#         AND(ksa_c.ctxts_[i].ctxt_, ctxt, ksa_g.ctxts_[i-step].ctxt_, st[2*id+1].stream, self.pubkey_)
+ #            Synchronize()
+
+	#     for i in range(begin+step, k):
+ #                id = i - begin - step
+	#         OR(ksa_g.ctxts_[i].ctxt_, ksa_c.ctxts_[i].ctxt_, ksa_g.ctxts_[i].ctxt_, st[id].stream, self.pubkey_)
+ #            Synchronize()
+ #            step += 1
+ #            begin += 1
+
+ #        for i in range(1,k):
+ #             XOR(ksa_s.ctxts_[i].ctxt_, ksa_s.ctxts_[i].ctxt_, ksa_g.ctxts_[i-1].ctxt_, st[i].stream, self.pubkey_)
+ #        Synchronize()
+ #        return ksa_s

@@ -26,8 +26,11 @@ import time
 import random
 import timeit
 
-inputs = [(0, 0), (0, 1), (1, 0), (1, 1)]
-circuits = ['__and__', '__or__', '__xor__', '__lt__', '__le__', '__eq__',
+inputs1 = [0, 1]
+circuits1 = ['__invert__']
+
+inputs2 = [(0, 0), (0, 1), (1, 0), (1, 1)]
+circuits2 = ['__and__', '__or__', '__xor__', '__lt__', '__le__', '__eq__',
             '__ne__', '__gt__', '__ge__']
 
 # Rand Seeds
@@ -40,10 +43,36 @@ pubkey, prikey = fhe.KeyGen()
 #fhe.StoreKeys(pubkey, prikey)
 fhe.Init(pubkey)
 
-for circuit in circuits:
-	for i in inputs:
-		m1, m2 = i
-		c1, c2 = fhe.Encrypt(m1, prikey), fhe.Encrypt(m2, prikey)
+# ADDITION
+if fhe.UseGPU():
+    length = 30
+else:
+    length = 3
+m1, m2 = random.getrandbits(length-1), random.getrandbits(length-1)
+c1 = fhe.Encrypt(m1, prikey, length)
+c2 = fhe.Encrypt(m2, prikey, length)
+start_time = timeit.default_timer()
+c = c1 + c2
+elapsed = timeit.default_timer() - start_time
+result = c.Decrypt(prikey)
+print m1, " + " , m2, " = ", result
+print elapsed, " sec"
+
+for circuit in circuits1:
+    for i in inputs1:
+        c1 = fhe.Encrypt(i, prikey)
+        func = getattr(operator, circuit)
+        start_time = timeit.default_timer()
+        c = func(c1)
+        elapsed_time = timeit.default_timer() - start_time
+        result = c.Decrypt(prikey)
+        passed = "PASS" if (result == (func(i) & 1)) else "FAIL"
+        print "Test " + circuit + ": " + passed
+        print "In " + str(elapsed_time) + " seconds"
+
+for circuit in circuits2:
+	for i in inputs2:
+		c1, c2 = fhe.Encrypt(i[0], prikey), fhe.Encrypt(i[1], prikey)
 		func = getattr(operator, circuit)
 		start_time = timeit.default_timer()
 		c = func(c1, c2)
