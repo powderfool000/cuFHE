@@ -281,7 +281,7 @@ class CtxtList:
         st = [Stream().Create() for i in range(len(self.ctxts_))]
         Synchronize()
         for i in range(len(self.ctxts_)):
-            AND(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i], self.pubkey_)
+            NOT(result.ctxts_[i].ctxt_, self.ctxts_[i].ctxt_, st[i])
         Synchronize()
         return result
 
