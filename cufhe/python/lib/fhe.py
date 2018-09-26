@@ -169,9 +169,14 @@ class Stream:
 
 
 class Ctxt:
-    def __init__(self, pubkey=None):
+    def __init__(self, pubkey=None, zero=False):
         self.ctxt_ = fhe.Ctxt()
         self.pubkey_ = pubkey
+        if zero:
+            ctxt1 = Ctxt(pubkey)
+            ctxt2 = ~ctxt1
+            result = ctxt1 & ctxt2
+            fhe.Copy(self.ctxt_, result.ctxt_)
 
     def Decrypt(self, prikey):
         return Decrypt(self, prikey)
@@ -242,8 +247,8 @@ class Ctxt:
 
 
 class CtxtList:
-    def __init__(self, length=0, pubkey=None):
-        self.ctxts_ = [Ctxt(pubkey) for i in range(length)]
+    def __init__(self, length=0, pubkey=None, zero=False):
+        self.ctxts_ = [Ctxt(pubkey, zero=zero) for i in range(length)]
         self.pubkey_ = pubkey
 
     def Decrypt(self, prikey):
@@ -307,6 +312,21 @@ class CtxtList:
             OR(c.ctxts_[i].ctxt_, z.ctxts_[i-1].ctxt_, y.ctxts_[i].ctxt_, st[0], self.pubkey_)
             Synchronize()
         return r
+
+    def __mul__(self, other):
+        temp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero = True) for i in range(len(self.ctxts_))]
+
+        for i in range (len(self.ctxts_)):
+            for j in range (len(self.ctxts_)):
+                AND(temp[i].ctxts_[j+i].ctxt_, self.ctxts_[j].ctxt_, other.ctxts_[i].ctxt_, None, self.pubkey_)
+
+        for i in range (1, len(self.ctxts_)) :
+            temp[0] = temp[0] + temp[i]
+
+        return temp[0]
+
+    # def __mul__(self, other):
+    #     tmp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero=True) for i in range(len(self.ctxts_))]
 
 
  #    def __add__(self, other):

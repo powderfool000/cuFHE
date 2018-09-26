@@ -47,15 +47,15 @@ fhe.Init(pubkey)
 if fhe.UseGPU():
 	length = 30
 else:
-	length = 3
+	length = 4
 m1, m2 = random.getrandbits(length-1), random.getrandbits(length-1)
 c1 = fhe.Encrypt(m1, prikey, length)
 c2 = fhe.Encrypt(m2, prikey, length)
 start_time = timeit.default_timer()
-c = c1 + c2
+c = c1 * c2
 elapsed = timeit.default_timer() - start_time
 result = c.Decrypt(prikey)
-print m1, " + " , m2, " = ", result
+print m1, " * " , m2, " = ", result
 print elapsed, " sec"
 
 ei1 = [fhe.Encrypt(i, prikey) for i in inputs1]
