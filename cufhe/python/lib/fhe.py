@@ -314,14 +314,19 @@ class CtxtList:
         return r
 
     def __mul__(self, other):
-        temp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero = True) for i in range(len(self.ctxts_))]
+        temp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero=True) for i in range(len(self.ctxts_))]
+        st = [Stream().Create() for i in range(len(self.ctxts_))]
+
+        Synchronize()
 
         for i in range (len(self.ctxts_)):
             for j in range (len(self.ctxts_)):
-                AND(temp[i].ctxts_[j+i].ctxt_, self.ctxts_[j].ctxt_, other.ctxts_[i].ctxt_, None, self.pubkey_)
+                AND(temp[i].ctxts_[j+i].ctxt_, self.ctxts_[j].ctxt_, other.ctxts_[i].ctxt_, st[j], self.pubkey_)
+                Synchronize()
 
         for i in range (1, len(self.ctxts_)) :
             temp[0] = temp[0] + temp[i]
+            Synchronize()
 
         return temp[0]
 
