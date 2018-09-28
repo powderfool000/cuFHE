@@ -344,6 +344,7 @@ class CtxtList:
         olen = len(other.ctxts_)
         result = CtxtList(slen+olen, self.pubkey_)
         carry = CtxtList(slen, self.pubkey_, zero=True)
+        a1 = CtxtList(slen, self.pubkey_)
         a = CtxtList(slen, self.pubkey_)
         b = CtxtList(slen, self.pubkey_)
         c = CtxtList(slen, self.pubkey_)
@@ -353,7 +354,7 @@ class CtxtList:
         st = [Stream().Create() for i in range(2*slen)]
 
         for i in range(1, slen):
-            AND(a[i], self[i], other[0], st[i*2], self.pubkey_)
+            AND(a1[i], self[i], other[0], st[i*2], self.pubkey_)
 
         AND(result[0], self[0], other[0], st[0], self.pubkey_)        
 
@@ -363,11 +364,11 @@ class CtxtList:
         Synchronize()
 
         for i in range(1, slen-1):
-            XOR(a[i], a[i+1], b[i], st[i*2], self.pubkey_)
-            AND(c[i], a[i+1], b[i], st[i*2+1], self.pubkey_)
+            XOR(a[i], a1[i+1], b[i], st[i*2], self.pubkey_)
+            AND(c[i], a1[i+1], b[i], st[i*2+1], self.pubkey_)
 
-        XOR(result[1], a[1], b[0], st[0], self.pubkey_)
-        AND(c[0], a[1], b[0], st[1], self.pubkey_)
+        XOR(result[1], a1[1], b[0], st[0], self.pubkey_)
+        AND(c[0], a1[1], b[0], st[1], self.pubkey_)
 
         for j in range(olen-2):
             Synchronize()
