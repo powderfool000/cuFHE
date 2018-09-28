@@ -182,7 +182,7 @@ class Ctxt:
             ctxt1 = Ctxt(pubkey)
             ctxt2 = ~ctxt1
             result = ctxt1 & ctxt2
-            fhe.Copy(self.ctxt_, result.ctxt_)
+            Copy(self.ctxt_, result.ctxt_, Stream().Create())
 
     def Decrypt(self, prikey):
         return Decrypt(self, prikey)
@@ -350,7 +350,7 @@ class CtxtList:
         t0 = CtxtList(slen, self.pubkey_)
         t1 = CtxtList(slen, self.pubkey_)
         t2 = CtxtList(slen, self.pubkey_)
-        st = [Stream.Create() for i in range(2*slen)]
+        st = [Stream().Create() for i in range(2*slen)]
 
         for i in range(1, slen):
             AND(a[i], self[i], other[0], st[i*2], self.pubkey_)
