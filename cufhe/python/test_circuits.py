@@ -43,7 +43,6 @@ pubkey, prikey = fhe.KeyGen()
 #fhe.StoreKeys(pubkey, prikey)
 fhe.Init(pubkey)
 
-# ADDITION
 if fhe.UseGPU():
 	length = 30
 else:

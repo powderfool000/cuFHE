@@ -119,7 +119,7 @@ def NAND(result, input1, input2, stream=None, pubkey=None):
     if use_gpu:
         fhe.NAND(result, input1, input2, stream)
     else:
-        fhe.NAND(result, input1, input2, stream)
+        fhe.NAND(result, input1, input2, pubkey)
 
 def OR(result, input1, input2, stream=None, pubkey=None):
     if use_gpu:
@@ -150,6 +150,12 @@ def NOT(result, input1, stream=None):
         fhe.NOT(result, input1, stream)
     else:
         fhe.NOT(result, input1)
+
+def Copy(result, input1, stream=None):
+    if use_gpu:
+        fhe.Copy(result, input1, stream)
+    else:
+        fhe.Copy(result, input1)
 
 
 class Stream:
@@ -254,6 +260,9 @@ class CtxtList:
     def Decrypt(self, prikey):
         return Decrypt(self, prikey)
 
+    def __getitem__(self, key):
+        return self.ctxts_[key].ctxt_
+
     def __and__(self, other):
         result = CtxtList(len(self.ctxts_), self.pubkey_)
         st = [Stream().Create() for i in range(len(self.ctxts_))]
@@ -313,22 +322,80 @@ class CtxtList:
             Synchronize()
         return r
 
+    # def __mul__(self, other):
+    #     temp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero=True) for i in range(len(self.ctxts_))]
+    #     st = [Stream().Create() for i in range(len(self.ctxts_))]
+
+    #     Synchronize()
+
+    #     for i in range (len(self.ctxts_)):
+    #         for j in range (len(self.ctxts_)):
+    #             AND(temp[i].ctxts_[j+i].ctxt_, self.ctxts_[j].ctxt_, other.ctxts_[i].ctxt_, st[j], self.pubkey_)
+    #             Synchronize()
+
+    #     for i in range (1, len(self.ctxts_)) :
+    #         temp[0] = temp[0] + temp[i]
+    #         Synchronize()
+
+    #     return temp[0]
+
     def __mul__(self, other):
-        temp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero=True) for i in range(len(self.ctxts_))]
-        st = [Stream().Create() for i in range(len(self.ctxts_))]
+        slen = len(self.ctxts_)
+        olen = len(other.ctxts_)
+        result = CtxtList(slen+olen, self.pubkey_)
+        carry = CtxtList(slen, self.pubkey_, zero=True)
+        a = CtxtList(slen, self.pubkey_)
+        b = CtxtList(slen, self.pubkey_)
+        c = CtxtList(slen, self.pubkey_)
+        t0 = CtxtList(slen, self.pubkey_)
+        t1 = CtxtList(slen, self.pubkey_)
+        t2 = CtxtList(slen, self.pubkey_)
 
-        Synchronize()
+        for i in range(slen):
+            AND(a[i], self[i], other[0], None, self.pubkey_)
 
-        for i in range (len(self.ctxts_)):
-            for j in range (len(self.ctxts_)):
-                AND(temp[i].ctxts_[j+i].ctxt_, self.ctxts_[j].ctxt_, other.ctxts_[i].ctxt_, st[j], self.pubkey_)
-                Synchronize()
+        Copy(result[0], a[0], None)
 
-        for i in range (1, len(self.ctxts_)) :
-            temp[0] = temp[0] + temp[i]
-            Synchronize()
+        for i in range(slen-1):
+            AND(b[i], self[i], other[1], None, self.pubkey_)
 
-        return temp[0]
+        for i in range(slen-1):
+            XOR(a[i], a[i+1], b[i], None, self.pubkey_)
+            AND(c[i], a[i+1], b[i], None, self.pubkey_)
+
+        Copy(result[1], a[0], None)
+
+        for j in range(olen-2):
+            AND(a[-1], self[-1], other[j+1], None, self.pubkey_)
+
+            for i in range(slen-1):
+                AND(b[i], self[i], other[j+2], None, self.pubkey_)
+
+            for i in range(slen-1):
+                XOR(t0[i], a[i+1], b[i], None, self.pubkey_)
+                AND(t1[i], a[i+1], b[i], None, self.pubkey_)
+                AND(t2[i], t0[i], c[i], None, self.pubkey_)
+                XOR(a[i], t0[i], c[i], None, self.pubkey_)
+                OR(c[i], t1[i], t2[i], None, self.pubkey_)
+
+            Copy(result[j+2], a[0], None)
+
+        AND(a[-1], self[-1], other[-1], None, self.pubkey_)
+
+        XOR(result[olen], c[0], a[1], None, self.pubkey_)
+        AND(b[1], c[0], a[1], None, self.pubkey_)
+
+        for i in range(1, slen-1):
+            XOR(t0[i], a[i+1], b[i], None, self.pubkey_)
+            AND(t1[i], a[i+1], b[i], None, self.pubkey_)
+            AND(t2[i], t0[i], c[i], None, self.pubkey_)
+            XOR(result[olen+i], t0[i], c[i], None, self.pubkey_)
+            OR(c[i+1], t1[i], t2[i], None, self.pubkey_)
+
+        Copy(result[-1], c[-1], None)
+
+        return result
+
 
     # def __mul__(self, other):
     #     tmp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero=True) for i in range(len(self.ctxts_))]
