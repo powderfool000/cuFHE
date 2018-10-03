@@ -353,6 +353,8 @@ class CtxtList:
         t2 = CtxtList(slen, self.pubkey_)
         st = [Stream().Create() for i in range(2*slen)]
 
+        Synchronize()
+
         for i in range(1, slen):
             AND(a1[i], self[i], other[0], st[i*2], self.pubkey_)
 
@@ -425,11 +427,6 @@ class CtxtList:
         Synchronize()
 
         return result
-
-
-    # def __mul__(self, other):
-    #     tmp = [CtxtList(2*len(self.ctxts_), self.pubkey_, zero=True) for i in range(len(self.ctxts_))]
-
 
  #    def __add__(self, other):
  #        k = len(self.ctxts_)
