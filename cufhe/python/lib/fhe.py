@@ -407,24 +407,32 @@ class CtxtList:
         XOR(result[olen], c[0], a[1], st[0], self.pubkey_)
         AND(b[1], c[0], a[1], st[1], self.pubkey_)
 
-        for i in range(1, slen-1):
-            XOR(t0[i], a[i+1], b[i], st[i*2], self.pubkey_)
-            AND(t1[i], a[i+1], b[i], st[i*2+1], self.pubkey_)
-
-        Synchronize()
-
-        for i in range(1, slen-1):
-            AND(t2[i], t0[i], c[i], st[i*2], self.pubkey_)
-            XOR(result[olen+i], t0[i], c[i], st[i*2+1], self.pubkey_)
-
-        Synchronize()
-
         for i in range(1, slen-2):
-            OR(c[i+1], t1[i], t2[i], st[i], self.pubkey_)
+            XOR(t0[i], a[i+1], c[i], st[i*2], self.pubkey_)
+            AND(t1[i], a[i+1], c[i], st[i*2+1], self.pubkey_)
 
-        OR(result[-1], t1[-2], t2[-2], st[0], self.pubkey_)
+            Synchronize()
+
+            AND(t2[i], t0[i], b[i], st[i*2], self.pubkey_)
+            XOR(result[olen+i], t0[i], b[i], st[i*2+1], self.pubkey_)
+
+            Synchronize()
+
+            OR(b[i+1], t1[i], t2[i], st[i], self.pubkey_)
+
+            Synchronize()
+
+        XOR(t0[-2], a[-1], c[-2], st[-2], self.pubkey_)
+        AND(t1[-2], a[-1], c[-2], st[-1], self.pubkey_)
 
         Synchronize()
+
+        AND(t2[-2], t0[-2], b[-2], st[-2], self.pubkey_)
+        XOR(result[olen+slen-2], t0[-2], b[-2], st[-1], self.pubkey_)
+
+        Synchronize()
+
+        OR(result[olen+slen-1], t1[-2], t2[-2], st[-2], self.pubkey_)
 
         return result
 
