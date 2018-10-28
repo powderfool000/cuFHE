@@ -27,6 +27,9 @@ using namespace cufhe;
 #include <iostream>
 using namespace std;
 
+Ctxt cufhe::ct_zero;
+Ctxt cufhe::ct_one;
+
 // Full adder without carry in
 void full_adder(Ctxt& z, Ctxt& co, Ctxt& a, Ctxt& b, PubKey& pub_key) {
   And(co, a, b, pub_key);
@@ -54,19 +57,22 @@ void add_n(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
 }
 
 // Initialize a plaintext array
-void init_ptxt(Ptxt* p, int8_t n) {
-  for (int i = 0; i < 8; i++) {
-    p[i].message_ = n & 0x1;
-    n >>= 1;
+void init_ptxt(Ptxt* p, int8_t x, uint8_t n) {
+  for (int i = 0; i < n; i++) {
+    p[i].message_ = x & 0x1;
+    x >>= 1;
   }
 }
 
-int8_t dump_ptxt(Ptxt* p) {
+int8_t dump_ptxt(Ptxt* p, uint8_t n) {
   int8_t out = 0;
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = n-1; i >= 0; i--) {
+    cout<<p[i].message_;
     out |= p[i].message_ << i;
   }
+
+  cout<<endl;
 
   return out;
 }
@@ -80,11 +86,13 @@ int main() {
   Ptxt* pta = new Ptxt[N]; // input a
   Ptxt* ptb = new Ptxt[N]; // input b
   Ptxt* ptz = new Ptxt[N]; // output
+  Ptxt* pts = new Ptxt;
 
   Ctxt* cta = new Ctxt[N]; // input a
   Ctxt* ctb = new Ctxt[N]; // input b
   Ctxt* ctz = new Ctxt[N]; // output
   Ctxt* ctc = new Ctxt[N]; // carry
+  Ctxt* cts = new Ctxt;
 
   cout<< "------ Key Generation ------" <<endl;
   PriKey pri_key;
@@ -93,11 +101,12 @@ int main() {
 
   cout<< "------ Adder Test ------" <<endl;
 
-  init_ptxt(pta, -1);
-  init_ptxt(ptb, -1);
+  init_ptxt(pts, 1, 1);
+  init_ptxt(pta, 8, N);
+  init_ptxt(ptb, 3, N);
 
-  cout<<"A: "<<int(dump_ptxt(pta))<<endl;
-  cout<<"B: "<<int(dump_ptxt(ptb))<<endl;
+  cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
+  cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
 
   // Encrypt
   cout<< "Encrypting..."<<endl;
@@ -106,10 +115,40 @@ int main() {
     Encrypt(ctb[i], ptb[i], pri_key);
   }
 
+  Encrypt(*cts, *pts, pri_key);
+
+  Ptxt* pt_one = new Ptxt;
+  Ptxt* pt_zero = new Ptxt;
+  init_ptxt(pt_zero, 0, 1);
+  init_ptxt(pt_zero, 0, 1);
+
+  Encrypt(ct_zero, *pt_zero, pri_key);
+  Encrypt(ct_one, *pt_one, pri_key);
+
   // Calculate
   cout<< "Calculating..."<<endl;
 
-  add_n(ctz, ctc, cta, ctb, pub_key, 8);
+  // add_n(ctz, ctc, cta, ctb, pub_key, N);
+
+  // Add(ctz, ctc, cta, ctb, pub_key, N);
+  // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
+  // Mux(ctz, cta, ctb, cts, pub_key, N);
+  Sub(ctz, ctc, cta, ctb, pub_key, N);
+
+  // Ctxt* p0 = new Ctxt[8];
+  // Ctxt* p1 = new Ctxt[8];
+  // Ctxt* is = new Ctxt;
+
+  // Not(*is, *cts);
+
+  // for (uint8_t i = 0; i < N; i++) {
+  //   And(p0[i], cta[i], *is, pub_key);
+  //   And(p1[i], ctb[i], *cts, pub_key);
+  // }
+
+  // for (uint8_t i = 0; i < N; i++) {
+  //   Or(ctz[i], p0[i], p1[i], pub_key);
+  // }
 
   // Decrypt
   cout<< "Decrypting"<<endl;
@@ -117,7 +156,7 @@ int main() {
     Decrypt(ptz[i], ctz[i], pri_key);
   }
 
-  cout<<"A + B = "<<int(dump_ptxt(ptz))<<endl;
+  cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
 
   Decrypt(pta[0], ctc[N-1], pri_key);
 

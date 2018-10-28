@@ -33,6 +33,9 @@
 
 namespace cufhe {
 
+extern Ctxt ct_zero;
+extern Ctxt ct_one;
+
 void And (Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
 void Or  (Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
 void Nand(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
@@ -41,6 +44,10 @@ void Xor (Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
 void Xnor(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
 void Not (Ctxt& out, const Ctxt& in);
 void Copy(Ctxt& out, const Ctxt& in);
+void Add (Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n);
+void Add (Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, PubKey& pub_key, uint8_t n);
+void Mux (Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, PubKey& pub_key, uint8_t n);
+void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n);
 // Not Ready...
 // void Mux(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const Ctxt& in2,
 //          cudaStream_t st = 0);

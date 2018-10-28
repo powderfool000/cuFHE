@@ -120,4 +120,86 @@ void Copy(Ctxt& out,
     out.lwe_sample_->data()[i] = in.lwe_sample_->data()[i];
 }
 
+void Ha(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, PubKey& pub_key) {
+  Xor(z, a, b, pub_key);
+  And(co, a, b, pub_key);
+}
+
+void Fa(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, const Ctxt& ci, PubKey& pub_key) {
+  Ctxt t0, t1, t2;
+
+  Xor(t0, a, b, pub_key);
+  And(t1, a, b, pub_key);
+  And(t2, ci, t0, pub_key);
+  Xor(z, ci, t0, pub_key);
+  Or(co, t1, t2, pub_key);
+}
+
+void Rca(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
+  Ha(z[0], c[0], a[0], b[0], pub_key);
+
+  for (uint8_t i = 1; i < n; i++) {
+    Fa(z[i], c[i], a[i], b[i], c[i-1], pub_key);
+  }
+}
+
+void Rca(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, PubKey& pub_key, uint8_t n) {
+  Fa(z[0], co[0], a[0], b[0], *ci, pub_key);
+
+  for (uint8_t i = 1; i < n; i++) {
+    Fa(z[i], co[i], a[i], b[i], co[i-1], pub_key);
+  }
+}
+
+void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, PubKey& pub_key, uint8_t n) {
+  Ctxt p0[n];
+  Ctxt p1[n];
+  Ctxt is;
+
+  Not(is, *s);
+
+  for (uint8_t i = 0; i < n; i++) {
+    And(p0[i], in0[i], is, pub_key);
+    And(p1[i], in1[i], *s, pub_key);
+  }
+
+  for (uint8_t i = 0; i < n; i++) {
+    Or(z[i], p0[i], p1[i], pub_key);
+  }
+}
+
+void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
+  Ctxt t0[(n+1)/2], t1[(n+1)/2];
+  Ctxt c0[(n+1)/2], c1[(n+1)/2];
+
+  Rca(z, c, a, b, pub_key, n/2);
+
+  Rca(t0, c0, a+n/2, b+n/2, pub_key, (n+1)/2);
+  Rca(t1, c1, a+n/2, b+n/2, &ct_one, pub_key, (n+1)/2);
+
+  Mux(z+n/2, t0, t1, c+n/2-1, pub_key, (n+1)/2);
+  Mux(c+n/2, c0, c1, c+n/2-1, pub_key, (n+1)/2);
+}
+
+void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
+  Csa(z, c, a, b, pub_key, n);
+}
+
+void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, PubKey& pub_key, uint8_t n) {
+  Rca(z, c, a, b, s, pub_key, n);
+}
+
+void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
+  Ctxt t[n];
+
+  for (uint8_t i = 0; i < n; i++) {
+    Not(t[i], b[i]);
+  }
+
+  Add(z, c, a, t, &ct_one, pub_key, n);
+}
+
+void Mul(Ctxt* z, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
+}
+
 } // namespace cufhe
