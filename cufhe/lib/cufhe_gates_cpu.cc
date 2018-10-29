@@ -202,4 +202,25 @@ void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
 void Mul(Ctxt* z, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
 }
 
+// a / b = z
+void Div(Ctxt* z, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
+  Ctxt r[2*n];
+  Ctxt t0[n], t1[n];
+  Ctxt c[n];
+
+  for (int i = 0; i < n; i++) {
+    Copy(r[n+i], ct_zero);
+    Copy(r[i], a[i]);
+  }
+
+  Sub(r+n, c, r+n, b, pub_key, n);
+
+  for (int i = n-1; i >= 0; i--) {
+    Sub(t0, c, r+i, b, pub_key, n);
+    Add(t1, c, r+i, b, pub_key, n);
+    Mux(r+i, t0, t1, r+n+i-1, pub_key, n);
+    Not(z[i], r[n+i-1]);
+  }
+}
+
 } // namespace cufhe
