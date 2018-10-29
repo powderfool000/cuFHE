@@ -120,7 +120,7 @@ int main() {
   Ptxt* pt_one = new Ptxt;
   Ptxt* pt_zero = new Ptxt;
   init_ptxt(pt_zero, 0, 1);
-  init_ptxt(pt_zero, 0, 1);
+  init_ptxt(pt_one, 1, 1);
 
   Encrypt(ct_zero, *pt_zero, pri_key);
   Encrypt(ct_one, *pt_one, pri_key);

@@ -181,12 +181,25 @@ void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
   Mux(c+n/2, c0, c1, c+n/2-1, pub_key, (n+1)/2);
 }
 
+void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, PubKey& pub_key, uint8_t n) {
+  Ctxt t0[(n+1)/2], t1[(n+1)/2];
+  Ctxt c0[(n+1)/2], c1[(n+1)/2];
+
+  Rca(z, co, a, b, ci, pub_key, n/2);
+
+  Rca(t0, c0, a+n/2, b+n/2, pub_key, (n+1)/2);
+  Rca(t1, c1, a+n/2, b+n/2, &ct_one, pub_key, (n+1)/2);
+
+  Mux(z+n/2, t0, t1, co+n/2-1, pub_key, (n+1)/2);
+  Mux(co+n/2, c0, c1, co+n/2-1, pub_key, (n+1)/2);
+}
+
 void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
   Csa(z, c, a, b, pub_key, n);
 }
 
 void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, PubKey& pub_key, uint8_t n) {
-  Rca(z, c, a, b, s, pub_key, n);
+  Csa(z, c, a, b, s, pub_key, n);
 }
 
 void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
@@ -204,22 +217,37 @@ void Mul(Ctxt* z, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
 
 // a / b = z
 void Div(Ctxt* z, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
-  Ctxt r[2*n];
-  Ctxt t0[n], t1[n];
-  Ctxt c[n];
+  Ctxt r[2*n];      // non-restoring reg
+  Ctxt* s = r+n;      // 'working' index
+  Ctxt t0[n], t1[n];    // temp
+  Ctxt c[n];    // carry
+  Ctxt bi[n];   // bi = -b
 
+  // initialize
   for (int i = 0; i < n; i++) {
-    Copy(r[n+i], ct_zero);
+    Not(bi[i], b[i]);
+    Copy(s[i], ct_zero);
     Copy(r[i], a[i]);
   }
 
-  Sub(r+n, c, r+n, b, pub_key, n);
+  Rca(bi, c, bi, s, &ct_one, pub_key, n);
 
-  for (int i = n-1; i >= 0; i--) {
-    Sub(t0, c, r+i, b, pub_key, n);
-    Add(t1, c, r+i, b, pub_key, n);
-    Mux(r+i, t0, t1, r+n+i-1, pub_key, n);
-    Not(z[i], r[n+i-1]);
+  // first iteration is always subtract (add bi)
+  s--;
+  Add(t0, c, s, bi, pub_key, n);
+
+  for (int i = 0; i < n; i++) {
+    Copy(s[i], t0[i]);
+  }
+
+  Not(z[s-r], s[n-1]);
+
+  while (s > r) {
+    s--;
+    Add(t0, c, s, bi, pub_key, n);
+    Add(t1, c, s, b, pub_key, n);
+    Mux(s, t0, t1, s+n, pub_key, n);
+    Not(z[s-r], s[n-1]);
   }
 }
 
