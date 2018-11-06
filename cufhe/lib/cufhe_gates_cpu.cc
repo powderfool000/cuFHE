@@ -30,6 +30,9 @@ namespace cufhe {
 //void And (Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
 //void Or  (Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
 //void Xor (Ctxt& out, const Ctxt& in0, const Ctxt& in1, const PubKey& pub_key);
+void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n);
+void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, PubKey& pub_key, uint8_t n);
+
 void Nand(Ctxt& out,
           const Ctxt& in0,
           const Ctxt& in1,
@@ -168,6 +171,27 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, PubKey& pub_key, uint8_t n) {
   }
 }
 
+void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, PubKey& pub_key, uint8_t n) {
+  Ctxt t0[(n+1)/2], t1[(n+1)/2];
+  Ctxt c0[(n+1)/2], c1[(n+1)/2];
+
+  if(n >= 2){
+    Csa(z, co, a, b, ci, pub_key, n/2);
+
+    Csa(t0, c0, a+n/2, b+n/2, pub_key, (n+1)/2);
+    Csa(t1, c1, a+n/2, b+n/2, &ct_one, pub_key, (n+1)/2);
+  }
+  else{
+  Rca(z, co, a, b, ci, pub_key, n/2);
+
+  Rca(t0, c0, a+n/2, b+n/2, pub_key, (n+1)/2);
+  Rca(t1, c1, a+n/2, b+n/2, &ct_one, pub_key, (n+1)/2);
+}
+
+  Mux(z+n/2, t0, t1, co+n/2-1, pub_key, (n+1)/2);
+  Mux(co+n/2, c0, c1, co+n/2-1, pub_key, (n+1)/2);
+}
+
 void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
   Ctxt t0[(n+2)/2], t1[(n+2)/2]; 
   Ctxt c0[(n+2)/2], c1[(n+2)/2];
@@ -190,18 +214,6 @@ void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
 
 }
 
-void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, PubKey& pub_key, uint8_t n) {
-  Ctxt t0[(n+1)/2], t1[(n+1)/2];
-  Ctxt c0[(n+1)/2], c1[(n+1)/2];
-
-  Rca(z, co, a, b, ci, pub_key, n/2);
-
-  Rca(t0, c0, a+n/2, b+n/2, pub_key, (n+1)/2);
-  Rca(t1, c1, a+n/2, b+n/2, &ct_one, pub_key, (n+1)/2);
-
-  Mux(z+n/2, t0, t1, co+n/2-1, pub_key, (n+1)/2);
-  Mux(co+n/2, c0, c1, co+n/2-1, pub_key, (n+1)/2);
-}
 
 void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
   Csa(z, c, a, b, pub_key, n);
