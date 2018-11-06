@@ -169,29 +169,24 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, PubKey& pub_key, uint8_t n) {
 }
 
 void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
-  Ctxt t0[(n+2)/8], t1[(n+2)/8], t2[(n+2)/8]; t3[(n+2)/8], t4[(n+2)/8]; t5[(n+2)/8];
-  Ctxt c0[(n+2)/8], c1[(n+2)/8], c2[(n+2)/8]; c3[(n+2)/8], c4[(n+2)/8]; c5[(n+2)/8];
+  Ctxt t0[(n+2)/2], t1[(n+2)/2]; 
+  Ctxt c0[(n+2)/2], c1[(n+2)/2];
 
-  Rca(z, c, a, b, pub_key, n/8);
+  if(n >= 2){
+    Csa(z, c, a, b, pub_key, n/2);
 
-  Rca(t0, c0, a+n/8, b+n/8, pub_key, (n+2)/8);
-  Rca(t1, c1, a+n/8, b+n/8, &ct_one, pub_key, (n+2)/8);
+    Csa(t0, c0, a+n/2, b+n/2, pub_key, (n+1)/2);
+    Csa(t1, c1, a+n/2, b+n/2, &ct_one, pub_key, (n+1)/2);
+  }
+  else{
+    Rca(z, c, a, b, pub_key, n/2);
 
-  Rca(t2, c2, a+n/4, b+n/4, pub_key, (n+2)/8);
-  Rca(t3, c3, a+n/4, b+n/4, &ct_one, pub_key, (n+2)/8);
+    Rca(t0, c0, a+n/2, b+n/2, pub_key, (n+1)/2);
+    Rca(t1, c1, a+n/2, b+n/2, &ct_one, pub_key, (n+1)/2);
+}
 
-  Rca(t4, c4, a+n/2, b+n/2, pub_key, (n+2)/8);
-  Rca(t5, c5, a+n/2, b+n/2, &ct_one, pub_key, (n+2)/8);
-
-  Mux(z+n/8, t0, t1, c+n/8-1, pub_key, (n+2)/8);
-  Mux(c+n/8, c0, c1, c+n/8-1, pub_key, (n+2)/8);
-
-  Mux(z+n/4, t2, t3, c+n/4-1, pub_key, (n+2)/4);
-  Mux(c+n/4, c2, c3, c+n/4-1, pub_key, (n+2)/4);
-
-  Mux(z+n/2, t4, t5, c+n/2-1, pub_key, (n+2)/2);
-  Mux(c+n/2, c4, c5, c+n/2-1, pub_key, (n+2)/2);
-
+  Mux(z+n/2, t1, t0, c+n/2-1, pub_key, (n+1)/2);
+  Mux(c+n/2, c1, c0, c+n/2-1, pub_key, (n+1)/2);
 
 }
 
