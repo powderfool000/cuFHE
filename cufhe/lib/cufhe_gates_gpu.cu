@@ -26,6 +26,9 @@
 
 namespace cufhe {
 
+void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns);
+void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n, uint8_t ns);
+
 void Initialize(const PubKey& pub_key) {
   BootstrappingKeyToNTT(pub_key.bk_);
   KeySwitchingKeyToDevice(pub_key.ksk_);
@@ -206,16 +209,23 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n) {
   Synchronize();
 }
 
-void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
+void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
   Ctxt t0[(n+1)/2], t1[(n+1)/2];
   Ctxt c0[(n+1)/2], c1[(n+1)/2];
 
   Synchronize();
 
-  Rca(z, c, a, b, st[0], n/2);
+  if (n >= 4 && 2*ns >= 3*n) {
+    Csa(z, c, a, b, st, n/2, ns/3);
 
-  Rca(t0, c0, a+n/2, b+n/2, st[1], (n+1)/2);
-  Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
+    Csa(t0, c0, a+n/2, b+n/2, st+ns/3, (n+1)/2, ns/3);
+    Csa(t1, c1, a+n/2, b+n/2, &ct_one, st+2*ns/3, (n+1)/2, ns/3);
+  } else {
+    Rca(z, c, a, b, st[0], n/2);
+
+    Rca(t0, c0, a+n/2, b+n/2, st[1], (n+1)/2);
+    Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
+  }
 
   Synchronize();
 
@@ -225,16 +235,23 @@ void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
   Synchronize();
 }
 
-void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n) {
+void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n, uint8_t ns) {
   Ctxt t0[(n+1)/2], t1[(n+1)/2];
   Ctxt c0[(n+1)/2], c1[(n+1)/2];
 
   Synchronize();
 
-  Rca(z, co, a, b, ci, st[0], n/2);
+  if (n >= 4 && 2*ns >= 3*n) {
+    Csa(z, co, a, b, ci, st, n/2, ns/3);
 
-  Rca(t0, c0, a+n/2, b+n/2, st[1], (n+1)/2);
-  Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
+    Csa(t0, c0, a+n/2, b+n/2, st+ns/3, (n+1)/2, ns/3);
+    Csa(t1, c1, a+n/2, b+n/2, &ct_one, st+2*ns/3, (n+1)/2, ns/3);
+  } else {
+    Rca(z, co, a, b, ci, st[0], n/2);
+
+    Rca(t0, c0, a+n/2, b+n/2, st[1], (n+1)/2);
+    Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
+  }
 
   Synchronize();
 
@@ -244,15 +261,15 @@ void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n) {
   Synchronize();
 }
 
-void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
-  Csa(z, c, a, b, st, n);
+void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
+  Csa(z, c, a, b, st, n, ns);
 }
 
-void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, Stream* st, uint8_t n) {
-  Csa(z, c, a, b, s, st, n);
+void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, Stream* st, uint8_t n, uint8_t ns) {
+  Csa(z, c, a, b, s, st, n, ns);
 }
 
-void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
+void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
   Ctxt t[n];
 
   Synchronize();
@@ -263,7 +280,7 @@ void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
 
   Synchronize();
 
-  Add(z, c, a, t, &ct_one, st, n);
+  Add(z, c, a, t, &ct_one, st, n, ns);
 
   Synchronize();
 }
@@ -272,7 +289,7 @@ void Mul(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
 }
 
 // a / b = z
-void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
+void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
   Ctxt r[2*n];      // non-restoring reg
   Ctxt* s = r+n;      // 'working' index
   Ctxt t0[n], t1[n];    // temp
@@ -290,13 +307,13 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
 
   Synchronize();
 
-  Add(bi, c, bi, s, &ct_one, st, n);
+  Add(bi, c, bi, s, &ct_one, st, n, ns);
 
   Synchronize();
 
   // first iteration is always subtract (add bi)
   s--;
-  Add(t0, c, s, bi, st, n);
+  Add(t0, c, s, bi, st, n, ns);
 
   Synchronize();
 
@@ -312,8 +329,8 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
 
   while (s > r) {
     s--;
-    Add(t0, c, s, bi, st, n);
-    Add(t1, c, s, b, st, n);
+    Add(t0, c, s, bi, st, n, ns);
+    Add(t1, c, s, b, st, n, ns);
 
     Synchronize();
 

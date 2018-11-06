@@ -78,8 +78,8 @@ int main() {
   Synchronize();
 
   // Create CUDA streams for parallel gates.
-  Stream* st = new Stream[N];
-  for (int i = 0; i < N; i ++)
+  Stream* st = new Stream[30];
+  for (int i = 0; i < 30; i ++)
     st[i].Create();
 
   cout<< "------ Adder Test ------" <<endl;
@@ -113,11 +113,11 @@ int main() {
 
   // add_n(ctz, ctc, cta, ctb, pub_key, N);
 
-  // Add(ctz, ctc, cta, ctb, pub_key, N);
+  Add(ctz, ctc, cta, ctb, st, N, 30);
   // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
   // Mux(ctz, cta, ctb, cts, pub_key, N);
   // Sub(ctz, ctc, cta, ctb, pub_key, N);
-  Div(ctz, cta, ctb, st, N);
+  // Div(ctz, cta, ctb, st, N);
 
   // Ctxt* p0 = new Ctxt[8];
   // Ctxt* p1 = new Ctxt[8];
