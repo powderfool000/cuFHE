@@ -79,7 +79,7 @@ void Not (Ctxt& out, const Ctxt& in, Stream st = 0);
 void Copy(Ctxt& out, const Ctxt& in, Stream st = 0);
 void Add (Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns);
 void Add (Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n, uint8_t ns);
-void Mux (Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n);
+void Mux (Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n, uint8_t ns);
 void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns);
 void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns);
 // Not Ready...
