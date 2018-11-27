@@ -1,0 +1,72 @@
+
+
+
+
+//Floating Point Addition Psudo Code
+
+//Step 1
+
+Subtract(SUM, input1exponent, input2exponent, n)
+
+if(SUM == negative)
+	tenative_exponent = input2exponent
+
+else
+	temp_exponent = input1exponent
+
+//Step 2 (this will be within each of the above if statement results, just switched around for the matching exponent)
+
+Shift(input2 , right, by SUM)
+	for( i=0; i < tentative_exponent; i++)
+		OR(input2[p+3], ShiftedOutbit[ii], ShiftedOutBit[i+1])  ///this is the sticky, which is the OR of all shifted out bits past the G and R bits
+//Step 3
+	add(SolutionHolder, input1mantisa, input2mantisa, n)
+
+//Step 4
+if(SolutionHolder == has carryout)
+	Shift(SolutionHolder, right, 1)
+	temp_exponent += 1
+//deal with any fring cases like infinity or whatever here
+
+//Step 5      //Rounding Step
+OR(roundtemp, SolutionHolder[p + 2], SolutionHolder[p + 3]) OR's the Round and Sticky bits
+AND(roundtemp, roundtemp, SolutionHolder[p+1])  //if all are 1, then make round temp 1, so you will round
+
+AND(SolutionHolder[p], SolutionHolder[p], roundtemp) //adds the roundtemp to the rightmost bit in the mantisa
+
+//if this causes a carry out, go back to STEP 4 and continue through to Step 5
+
+
+void halffloatAdd(z, Ctxt in1*, Ctxt in2*, pubkey_){ 
+	Ctxt* expsum[5];	//for the exponent subtraction
+	Ctxt* negcheck;		//for checking which exponent is larger
+	Ctxt* tentative_exponent[5];
+	Ctxt* in1exp [5];	//exponent of in1
+	Ctxt* in2exp [5];	//exponent of in2
+
+	Ctxt* smalIn[16];
+
+	//getting arrays of the exponents
+	for(i = 0; i < 5; i++){
+	in1exp*[i] = in1*[9+i];
+	in2exp*[i] = in2*[9+i];
+	}
+
+
+//--------------------------PART 1-----------------------------
+
+	Sub(expsum*, in1exp*, in2exp*, 5, pubkey_); // subtract the first exponentes
+
+	//check if negative
+	initone(negcheck, pubkey_);
+	AND(negcheck, expsum[4], pubkey_);
+
+//if "negcheck" is positive, then input2 is larger, else input1 larger. 
+	MUX(tent_expo*, in1exp*, in2exp*, negcheck, pubkey_, 5); 				//make tent_expo into whichever exponent is higher				
+
+	MUX(smalIn*,in1*, in2*, negcheck, pubkey_, 5);							//chosing which input is the "smaller" one , aka the one with smaller input
+
+//-------------------------PART 2-------------------------------
+
+	*insert shift right in here*
+
