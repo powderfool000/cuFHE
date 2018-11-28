@@ -37,14 +37,20 @@ AND(SolutionHolder[p], SolutionHolder[p], roundtemp) //adds the roundtemp to the
 //if this causes a carry out, go back to STEP 4 and continue through to Step 5
 
 
+
+-------------------------------------------------------------------------------
 void halffloatAdd(z, Ctxt in1*, Ctxt in2*, pubkey_){ 
 	Ctxt* expsum[5];	//for the exponent subtraction
 	Ctxt* negcheck;		//for checking which exponent is larger
 	Ctxt* tentative_exponent[5];
 	Ctxt* in1exp [5];	//exponent of in1
 	Ctxt* in2exp [5];	//exponent of in2
-
+	Ctxt* zero;			//a zero for shifting
 	Ctxt* smalIn[16];
+
+	initZero(Ctxt* zero, n, pubkey_); 	//make =0
+	initone(negcheck, pubkey_);			//make =1
+
 
 	//getting arrays of the exponents
 	for(i = 0; i < 5; i++){
@@ -58,7 +64,7 @@ void halffloatAdd(z, Ctxt in1*, Ctxt in2*, pubkey_){
 	Sub(expsum*, in1exp*, in2exp*, 5, pubkey_); // subtract the first exponentes
 
 	//check if negative
-	initone(negcheck, pubkey_);
+
 	AND(negcheck, expsum[4], pubkey_);
 
 //if "negcheck" is positive, then input2 is larger, else input1 larger. 
@@ -68,5 +74,36 @@ void halffloatAdd(z, Ctxt in1*, Ctxt in2*, pubkey_){
 
 //-------------------------PART 2-------------------------------
 
-	*insert shift right in here*
+	XOR(expsum*[4], negcheck, pubkey_); //make sure it is positive
+
+
+
+	for(i=0; i =< 10; i++){
+		if(i > 2){										//cases for when nothing shifted out past the sticky
+		Shift(Ctxt* smallOut, Ctxt* smallIn, 10, i);
+		}
+
+		Shift(Ctxt* smallOut, Ctxt* smallIn, 10, i);
+		Copy(Ctxt* guard[i], smallIn[ns-1], pubkey);	//guard
+		Copy(Ctxt* round[i], smallIn[ns-2], pubkey);	//round
+		Copy(Ctxt* sticky[i], smallIn[ns-3], pubkey);	//stickey
+
+		OR(Ctxt* sticky[i], Ctxt* stickey[i], Ctxt* sticky[i-1], pubkey_);
+	}
+
+}
+
+
+
+
+
+Shift(Ctxt* smallOut, ctxt* smallIn, n, nshift){
+
+	for(i = 0; i<(n-nshift); i++){
+		Copy(smallOut[i], in[nshift+i]);
+	}
+	for(i=(n-nshift); i<n; i++;){
+		Copy(smallOut[i], Ctxt* zero);
+	}
+}
 
