@@ -185,15 +185,13 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n, uint8_t 
 
   Not(is, *s, st[0]);
 
-  Synchronize();
-
   for (uint8_t i = 0; i < n; i++) {
-    And(p0[i], in0[i], is, st[i]);
-    And(p1[i], in1[i], *s, st[(2*i)%ns]);
+    And(p0[i], in0[i], is, st[i%ns]);
+    And(p1[i], in1[i], *s, st[i%ns]);
   }
 
   for (uint8_t i = 0; i < n; i++) {
-    Or(z[i], p0[i], p1[i], st[i]);
+    Or(z[i], p0[i], p1[i], st[i%ns]);
   }
 }
 
@@ -201,7 +199,7 @@ void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) 
   Ctxt t0[(n+1)/2], t1[(n+1)/2];
   Ctxt c0[(n+1)/2], c1[(n+1)/2];
 
-  if (n >= 4 && 2*ns >= 3*n) {
+  if (n >= 4 && ns >= 9) {
     Csa(z, c, a, b, st, n/2, ns/3);
 
     Csa(t0, c0, a+n/2, b+n/2, st+ns/3, (n+1)/2, ns/3);
@@ -213,17 +211,15 @@ void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) 
     Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
   }
 
-  Synchronize();
-
-  Mux(z+n/2, t0, t1, c+n/2-1, st, (n+1)/2, ns/2);
-  Mux(c+n/2, c0, c1, c+n/2-1, st+ns/2, (n+1)/2, ns/2);
+  Mux(z+n/2, t0, t1, c+n/2-1, st, (n+1)/2, ns);
+  Mux(c+n/2, c0, c1, c+n/2-1, st, (n+1)/2, ns);
 }
 
 void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n, uint8_t ns) {
   Ctxt t0[(n+1)/2], t1[(n+1)/2];
   Ctxt c0[(n+1)/2], c1[(n+1)/2];
 
-  if (n >= 4 && 2*ns >= 3*n) {
+  if (n >= 4 && ns >= 9) {
     Csa(z, co, a, b, ci, st, n/2, ns/3);
 
     Csa(t0, c0, a+n/2, b+n/2, st+ns/3, (n+1)/2, ns/3);
@@ -235,10 +231,8 @@ void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n, u
     Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
   }
 
-  Synchronize();
-
-  Mux(z+n/2, t0, t1, co+n/2-1, st, (n+1)/2, ns/2);
-  Mux(co+n/2, c0, c1, co+n/2-1, st+ns/2, (n+1)/2, ns/2);
+  Mux(z+n/2, t0, t1, co+n/2-1, st, (n+1)/2, ns);
+  Mux(co+n/2, c0, c1, co+n/2-1, st, (n+1)/2, ns);
 }
 
 void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
@@ -255,8 +249,6 @@ void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) 
   for (uint8_t i = 0; i < n; i++) {
     Not(t[i], b[i], st[i]);
   }
-
-  Synchronize();
 
   Add(z, c, a, t, &ct_one, st, n, ns);
 }

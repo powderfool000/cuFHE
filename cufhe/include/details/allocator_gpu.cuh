@@ -23,8 +23,81 @@
 #pragma once
 
 #include "allocator.h"
+#include <map>
 
 namespace cufhe {
+
+// A customized memory method for each GPU device.
+class DeviceAllocator {
+public:
+	DeviceAllocator();
+	~DeviceAllocator();
+	// find empty block in map;
+	// if not available, cudaMalloc() and add a block to map
+	char* allocate(std::ptrdiff_t size);
+	// remove ptr from map, set block to empty
+	void deallocate(char* ptr);
+	// cudaFree() all blocks in map
+	void freeAll();
+private:
+	typedef std::multimap<std::ptrdiff_t, char*> FreeBlocks;
+	typedef std::map<char*, std::ptrdiff_t> AllocatedBlocks;
+	FreeBlocks freeBlocks;
+	AllocatedBlocks allocatedBlocks;
+};
+
+// Return a pointer on current device.
+void* deviceMalloc(size_t size);
+
+// Free a pointer on current device.
+void deviceFree(void* ptr);
+
+// Check if DeviceAllocator is enabled.
+bool deviceAllocatorIsOn();
+
+// Create a deviceAllocator for each GPU;
+//	slice currect available GPU memory into blocks with a large "size";
+//	(now has problem when size is too small map is too large).
+void bootDeviceAllocator(size_t size, unsigned long int num = 0);
+
+// Free all allocated GPU memory and deviceAllocators.
+void haltDeviceAllocator();
+
+// A customized memory method for each GPU device.
+class HostAllocator {
+public:
+	HostAllocator();
+	~HostAllocator();
+	// find empty block in map;
+	// if not available, cudaMalloc() and add a block to map
+	char* allocate(std::ptrdiff_t size);
+	// remove ptr from map, set block to empty
+	void deallocate(char* ptr);
+	// cudaFree() all blocks in map
+	void freeAll();
+private:
+	typedef std::multimap<std::ptrdiff_t, char*> FreeBlocks;
+	typedef std::map<char*, std::ptrdiff_t> AllocatedBlocks;
+	FreeBlocks freeBlocks;
+	AllocatedBlocks allocatedBlocks;
+};
+
+// Return a pointer on current device.
+void* hostMalloc(size_t size);
+
+// Free a pointer on current device.
+void hostFree(void* ptr);
+
+// Check if DeviceAllocator is enabled.
+bool hostAllocatorIsOn();
+
+// Create a deviceAllocator for each GPU;
+//	slice currect available GPU memory into blocks with a large "size";
+//	(now has problem when size is too small map is too large).
+void bootHostAllocator(size_t size, unsigned long int num = 0);
+
+// Free all allocated GPU memory and deviceAllocators.
+void haltHostAllocator();
 
 class AllocatorCPU: public Allocator {
 public:

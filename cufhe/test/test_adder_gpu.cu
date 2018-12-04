@@ -27,8 +27,9 @@ using namespace cufhe;
 #include <iostream>
 using namespace std;
 
-Ctxt cufhe::ct_zero;
-Ctxt cufhe::ct_one;
+#include <include/details/allocator_gpu.cuh>
+
+#include <cuda_profiler_api.h>
 
 // Initialize a plaintext array
 void init_ptxt(Ptxt* p, int8_t x, uint8_t n) {
@@ -52,7 +53,15 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 8;
+  cudaSetDevice(0);
+  cudaDeviceProp prop;
+  cudaGetDeviceProperties(&prop, 0);
+  uint32_t kNumSMs = prop.multiProcessorCount;
+
+  bootDeviceAllocator(2048, 128);
+  bootHostAllocator(2048, 128);
+
+  uint8_t N = 16;
 
   SetSeed();  // set random seed
 
@@ -78,8 +87,8 @@ int main() {
   Synchronize();
 
   // Create CUDA streams for parallel gates.
-  Stream* st = new Stream[30];
-  for (int i = 0; i < 30; i ++)
+  Stream* st = new Stream[kNumSMs];
+  for (int i = 0; i < kNumSMs; i++)
     st[i].Create();
 
   cout<< "------ Adder Test ------" <<endl;
@@ -113,11 +122,13 @@ int main() {
 
   // add_n(ctz, ctc, cta, ctb, pub_key, N);
 
-  Add(ctz, ctc, cta, ctb, st, N, 30);
+  Add(ctz, ctc, cta, ctb, st, N, kNumSMs);
   // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
   // Mux(ctz, cta, ctb, cts, pub_key, N);
   // Sub(ctz, ctc, cta, ctb, pub_key, N);
-  // Div(ctz, cta, ctb, st, N);
+  // Div(ctz, cta, ctb, st, N, 10);
+
+  Synchronize();
 
   // Ctxt* p0 = new Ctxt[8];
   // Ctxt* p1 = new Ctxt[8];
@@ -145,6 +156,8 @@ int main() {
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
+
+  cudaProfilerStop();
   
   delete [] pta;
   delete [] ptb;
@@ -153,5 +166,9 @@ int main() {
   delete [] ctb;
   delete [] ctz;
   delete [] ctc;
+
+  haltHostAllocator();
+  haltDeviceAllocator();
+
   return 0;
 }
