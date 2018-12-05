@@ -323,14 +323,14 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
 void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
   int ns = 10;
   //Part 1
-  Ctxt* smallZero;
-  Ctxt* one; // a simple holder for one
+  Ctxt smallZero;
+  Ctxt one; // a simple holder for one
   Ctxt expsum[5];  //for the exponent subtraction
-  Ctxt* negcheck;   //for checking which exponent is larger
+  Ctxt negcheck;   //for checking which exponent is larger
   Ctxt tempexpo[5];  //tentative exponent  
   Ctxt in1exp [5]; //exponent of in1
   Ctxt in2exp [5]; //exponent of in2
-  Ctxt* zero;     //a zero for shifting
+  //Ctxt zero;     //a zero for shifting
   Ctxt smallIn[16]; //holder for the smaller input
   Ctxt bigIn[16];  //holder for the larger input
   Ctxt smallInman[13]; //holder for smaller input mantisa
@@ -347,29 +347,31 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
   //Part 4
   Ctxt mantisaSumcarryo[13]; //mantisaSum if there is a carry out in the addition
   Ctxt tempexpoCo[5];   //the exponent if there is a carry  
-  Ctxt expoOne[5];
+  Ctxt expoOne[5]; // a one to add to the exponents for rounding
 
   //PArt 5
   Ctxt mantisaSumround[13];
   Ctxt finalSum[19];
   Ctxt fullOne[19];
-  Ctxt* roundhold;
+  Ctxt roundhold;
   Ctxt finalSumRound[19];
 
 //--------------------Zero and One Inililiations----
   initZero(in1mantisaR, 13, st); //need to initialize to 0 for the round bits to be 0
   initZero(in2mantisaR, 13, st); //need to initialize to 0 for the round bits to be 0
-  initZero(zero, 13, st);   //make =0
-  initZero(zero, 1, st);
-  initOne(negcheck, 13, st);     //make =1
-  small out int to zero
+  //initZero(&zero, 13, st);   //make =0
+  initZero(&smallZero, 1, st);
+  initOne(&negcheck, 1, st);     //make =1
+  for(int i = 0; i <13; i++){
+    initZero(smallOut[i], 5, st);
+  }
   //part4 
-  initOne(one, 1, st);
-  initZero(expoOne, 1, st);
-  And(expoOne[0], expoOne[0], one, st[0]);
+  initOne(&one, 1, st);
+  initZero(expoOne, 5, st);
+  And(expoOne[0], expoOne[0], &one, st[0]);
   //part5
   initZero(fullOne, 19, st);
-  And(fullOne[0], fullOne[0], one, st[0]);
+  And(fullOne[0], fullOne[0], &one, st[0]);
 
 //-------------------getting temporary arrays of the exponents and mantisas --------------
   for(int i = 0; i < 5; i++){
@@ -383,18 +385,18 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 
 //--------------------------PART 1-----------------------------
 
-  Sub(expsum, smallZero, in1exp, in2exp, st, 5); // subtract the first exponentes
+  Sub(expsum, &smallZero, in1exp, in2exp, st, 5); // subtract the first exponentes
 
   //check if negative to determine which exponent is larger
 
-  And(*negcheck, *negcheck, expsum[4], st[1]);
+  And(negcheck, &negcheck, expsum[4], st[1]);
 
 //if "negcheck" is positive, then input2 is larger, else input1 larger. 
-  Mux(tempexpo, in1exp, in2exp, negcheck, st, 5);       //make tempexpo into whichever exponent is higher 
-  Mux(smallIn, in2, in1,  negcheck, st, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
-  Mux(bigIn, in1, in2, negcheck, st, 16);            // which input is bigger
-  Mux(smallInman, in2mantisaR, in1mantisaR, negcheck, st, 13);  //chose the smaller mantisa
-  Mux(bigInman, in1mantisaR, in2mantisaR,  negcheck, st, 13);    //chose the larger mantisa
+  Mux(tempexpo, in1exp, in2exp, &negcheck, st, 5);       //make tempexpo into whichever exponent is higher 
+  Mux(smallIn, in2, in1,  &negcheck, st, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
+  Mux(bigIn, in1, in2, &negcheck, st, 16);            // which input is bigger
+  Mux(smallInman, in2mantisaR, in1mantisaR, &negcheck, st, 13);  //chose the smaller mantisa
+  Mux(bigInman, in1mantisaR, in2mantisaR,  &negcheck, st, 13);    //chose the larger mantisa
 
 //-------------------------PART 2-------------------------------
 //-----------------------------------
@@ -403,10 +405,10 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 
   for(int i=0; i <= 10; i++){
     if(i < 3){                    //cases for when nothing shifted out past the sticky
-      Shift(smallOut[i], smallInman, smallZero, 10, i, st);
+      Shift(smallOut[i], smallInman, &smallZero, 10, i, st);
     }
     else{                     //itterating 0-10 shifts, assigning rounding bits along the way
-      Shift(smallOut[i], smallInman, smallZero, 10, i, st);
+      Shift(smallOut[i], smallInman, &smallZero, 10, i, st);
       Copy(smallOut[2][i], smallInman[i-1], st[7]);  //guard
       Copy(smallOut[1][i], smallInman[i-2], st[8]);  //round
       Copy(smallOut[0][i], smallInman[i-3], st[9]);  //stickey
@@ -419,15 +421,15 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 //-----------------------STILL IN PROCESS------------------------------------------
 
 //-----------------------Part 3 ------------------------------
-  Add(mantisaSum, co, smallInman, bigInman, smallZero, st, 13); //adding the mantisas together
+  Add(mantisaSum, co, smallInman, bigInman, &smallZero, st, 13); //adding the mantisas together
 //----------------------Part 4 -------------------------------
   //Normalizing for Carry Out
-  roundNormalize(finalSum, tempexpoCo, mantisaSumcarryo, co, mantisaSum, expoOne, tempexpo, smallZero, st);
+  roundNormalize(finalSum, tempexpoCo, mantisaSumcarryo, co, mantisaSum, expoOne, tempexpo, &smallZero, st);
 //----------------------Part 5 -------------------------------------
-  Or(*roundhold, finalSum[2], finalSum[0], st[3]);
-  And(*roundhold, roundhold, finalSum[1], st[3]);  //if all are 1, then make round temp 1, so you will round
+  Or(roundhold, finalSum[2], finalSum[0], st[3]);
+  And(roundhold, &roundhold, finalSum[1], st[3]);  //if all are 1, then make round temp 1, so you will round
 
-  Add(finalSumRound, co, finalSum, fullOne, zero, st, 19); //adds one to the answer
+  Add(finalSumRound, co, finalSum, fullOne, &smallZero, st, 19); //adds one to the answer
   Mux(finalSum, finalSumRound, finalSum, co, st, 19); //select the correct finalSum using co as select
 
   //cut off round bits
@@ -461,16 +463,16 @@ void normShift(Ctxt* smallOut, Ctxt* smallIn, Ctxt* smallZero, uint8_t n, int ns
     Copy(smallOut[i], smallIn[nshift+i], st[i]);
   }
   for(int i= temp; i < n; i++){
-    Copy(smallOut[i], smallZero, st[i]);
+    Copy(smallOut[i+3], smallZero, st[i]);
   }
 }
 
 void Shift(Ctxt* smallOut, Ctxt* smallIn, Ctxt* smallZero, uint8_t n, int nshift, Stream* st){
   int temp = (n-nshift);
   for(int i = 0; i<(temp); i++){
-    Copy(smallOut[i+3], smallIn[nshift+i], st[i]);
+    Copy(smallOut[i], smallIn[nshift+i], st[i]);
   }
-  for(int i=(temp); i<n; i++){
+  for(int i=(temp); i< 13; i++){
     Copy(smallOut[i+3], smallZero, st[i]);
   }
 }
