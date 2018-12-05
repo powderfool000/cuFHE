@@ -82,6 +82,13 @@ void Add (Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n);
 void Mux (Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n);
 void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n);
 void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n);
+void roundNormalize(Ctxt* finalSum, Ctxt* tempexpoCo, Ctxt* mantisaCosum, Ctxt* co, Ctxt* mantisaSum, Ctxt* exopoOne, Ctxt* tempexpo, Ctxt* smallZero, Stream* st);
+void normShift(Ctxt* smallOut, Ctxt* smallIn, Ctxt* smallZero, uint8_t n, int nshift, Stream* st);
+void Shift(Ctxt* smallOut, Ctxt* smallIn, Ctxt* smallZero, uint8_t n, int nshift, Stream* st);
+void removeRound(Ctxt* withoutround, Ctxt* withround, uint8_t n, Stream* st);
+void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st);
+void initZero(Ctxt* ct, const int ln, Stream* st);
+void initOne(Ctxt* ct, const int ln, Stream* st);
 // Not Ready...
 // void Mux(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const Ctxt& in2,
 //          cudaStream_t st = 0);

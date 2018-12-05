@@ -320,93 +320,97 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
   }
 }
 //--------------------------------------------------------------------------------------------------------------------------
-void halffloatAdd(z, Ctxt in1*, Ctxt in2*, pubkey_){ 
+void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
+  int ns = 10;
   //Part 1
-  Ctxt one; // a simple holder for one
-  Ctxt* expsum[5];  //for the exponent subtraction
+  Ctxt* smallZero;
+  Ctxt* one; // a simple holder for one
+  Ctxt expsum[5];  //for the exponent subtraction
   Ctxt* negcheck;   //for checking which exponent is larger
-  Ctxt* tempexpo[5];  //tentative exponent  
-  Ctxt* in1exp [5]; //exponent of in1
-  Ctxt* in2exp [5]; //exponent of in2
+  Ctxt tempexpo[5];  //tentative exponent  
+  Ctxt in1exp [5]; //exponent of in1
+  Ctxt in2exp [5]; //exponent of in2
   Ctxt* zero;     //a zero for shifting
-  Ctxt* smalIn[16]; //holder for the smaller input
-  Ctxt* bigIn[16];  //holder for the larger input
-  Ctxt* smallInman[13]; //holder for smaller input mantisa
-  Ctxt* bigInman[13];   //holder for the bigger input mantisa
-
+  Ctxt smallIn[16]; //holder for the smaller input
+  Ctxt bigIn[16];  //holder for the larger input
+  Ctxt smallInman[13]; //holder for smaller input mantisa
+  Ctxt bigInman[13];   //holder for the bigger input mantisa
   //Part 2
-  Ctxt* in1mantisaR[13];  //Used for holding the round bits, and adding
-  Ctxt* in2mantisaR[13];  //Used for holding the round bits, and adding
-  Ctxt* smallOut[13][10]; //smaller output 
+  Ctxt in1mantisaR[13];  //Used for holding the round bits, and adding
+  Ctxt in2mantisaR[13];  //Used for holding the round bits, and adding
+  Ctxt smallOut[13][10]; //smaller output 
 
   //Part 3
-  Ctxt* mantisaSum[13]; //sum of the two mantisas
+  Ctxt mantisaSum[13]; //sum of the two mantisas
   Ctxt* co; //carryout
 
   //Part 4
-  Ctxt* mantisaSumcarryo[13]; //mantisaSum if there is a carry out in the addition
-  Ctxt* tempexpocarry[5];   //the exponent if there is a carry  
-  Ctxt* expoOne[5];
+  Ctxt mantisaSumcarryo[13]; //mantisaSum if there is a carry out in the addition
+  Ctxt tempexpoCo[5];   //the exponent if there is a carry  
+  Ctxt expoOne[5];
 
   //PArt 5
-  Ctxt* mantisaSumround[13];
-  Ctxt* finalSum[19];
-  Ctxt* fullOne[19];
+  Ctxt mantisaSumround[13];
+  Ctxt finalSum[19];
+  Ctxt fullOne[19];
+  Ctxt* roundhold;
+  Ctxt finalSumRound[19];
 
 //--------------------Zero and One Inililiations----
-  initZero(in1mantisaR, 13, pubkey_); //need to initialize to 0 for the round bits to be 0
-  initZero(in2mantisaR, 13, pubkey_); //need to initialize to 0 for the round bits to be 0
-  initZero(Ctxt* zero, n, pubkey_);   //make =0
-  initone(negcheck, pubkey_);     //make =1
+  initZero(in1mantisaR, 13, st); //need to initialize to 0 for the round bits to be 0
+  initZero(in2mantisaR, 13, st); //need to initialize to 0 for the round bits to be 0
+  initZero(zero, 13, st);   //make =0
+  initZero(zero, 1, st);
+  initOne(negcheck, 13, st);     //make =1
   //part4 
-  initOne(one, pubkey);
-  initZero(expoOne, pubkey);
-  And(expoOne, expoOne, one, pubkey_);
+  initOne(one, 1, st);
+  initZero(expoOne, 1, st);
+  And(expoOne[0], expoOne[0], one, st[0]);
   //part5
-  initZero(fullOne, pubkey_);
-  And(fullOne, fullOne, one, pubkey_);
+  initZero(fullOne, 19, st);
+  And(fullOne[0], fullOne[0], one, st[0]);
 
 //-------------------getting temporary arrays of the exponents and mantisas --------------
-  for(i = 0; i < 5; i++){
-  in1exp*[i] = in1*[9+i];
-  in2exp*[i] = in2*[9+i];
+  for(int i = 0; i < 5; i++){
+    in1exp[i] = in1[9+i];
+    in2exp[i] = in2[9+i];
   }
-  for(i = 0; i< 10; i++){             
+  for(int i = 0; i< 10; i++){             
     in1mantisaR[i] = in1[i+3];  //leae last 3 bits for the round bits
     in2mantisaR[i] = in2[i+3];
   }
 
 //--------------------------PART 1-----------------------------
 
-  Sub(expsum*, in1exp*, in2exp*, 5, pubkey_); // subtract the first exponentes
+  Sub(expsum, smallZero, in1exp, in2exp, st, 5); // subtract the first exponentes
 
   //check if negative to determine which exponent is larger
 
-  AND(negcheck, negcheck, expsum[4], pubkey_);
+  And(*negcheck, *negcheck, expsum[4], st[1]);
 
 //if "negcheck" is positive, then input2 is larger, else input1 larger. 
-  MUX(tempexpo*, in1exp*, in2exp*, negcheck, pubkey_, 5);       //make tempexpo into whichever exponent is higher 
-  MUX(smalIn, in2, in1,  negcheck, pubkey_, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
-  MUX(bigIn, in1, in2, negcheck, pubkey_, 16);            // which input is bigger
-  MUX(smalInman, in2mantisaR, in1mantisaR, negcheck, pubkey_, 13);  //chose the smaller mantisa
-  MUX(bigInman, in1mantisaR, in2mantisaR,  negcheck, pubkey_, 13);    //chose the larger mantisa
+  Mux(tempexpo, in1exp, in2exp, negcheck, st, 5);       //make tempexpo into whichever exponent is higher 
+  Mux(smallIn, in2, in1,  negcheck, st, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
+  Mux(bigIn, in1, in2, negcheck, st, 16);            // which input is bigger
+  Mux(smallInman, in2mantisaR, in1mantisaR, negcheck, st, 13);  //chose the smaller mantisa
+  Mux(bigInman, in1mantisaR, in2mantisaR,  negcheck, st, 13);    //chose the larger mantisa
 
 //-------------------------PART 2-------------------------------
 //-----------------------------------
-  XOR(expsum*[4], negcheck, pubkey_); //make sure it is positive
+  Xor(expsum[4], expsum [4], negcheck, st[2]); //make sure it is positive
 ///----------------------------- IDK if this is needed, basicly its checking if the value is negative, meaning we could have to shift differently? probs not
 
-  for(i=0; i =< 10; i++){
+  for(int i=0; i <= 10; i++){
     if(i < 3){                    //cases for when nothing shifted out past the sticky
-      Shift(smallOut[i], smallInman, 10, i);
+      Shift(smallOut[i], smallInman, smallZero, 10, i, st);
     }
     else{                     //itterating 0-10 shifts, assigning rounding bits along the way
-      Shift(smallOut[i], smallInman, 10, i);
-      Copy(smallOut[2][i], smallInman[i-1], pubkey);  //guard
-      Copy(smallOut[1][i], smallInman[i-2], pubkey);  //round
-      Copy(smallOut[0][i], smallInman[i-3], pubkey);  //stickey
-
-      OR(Ctxt* smallOut[0][i], Ctxt* smallOut[0][i], Ctxt* smallOut[0][i-1], pubkey); //ORing the sticky together
+      Shift(smallOut[i], smallInman, smallZero, 10, i, st);
+      Copy(smallOut[2][i], smallInman[i-1], st[7]);  //guard
+      Copy(smallOut[1][i], smallInman[i-2], st[8]);  //round
+      Copy(smallOut[0][i], smallInman[i-3], st[9]);  //stickey
+//ISSUES-------------------------------------
+      //Or(Ctxt smallOut[0][i], Ctxt smallOut[0][i], Ctxt smallOut[0][i-1], st); //ORing the sticky together
     }
   }
 //-----------------------THIS IS THE 10 BIT MUX RIGHT HERE-----------------------------
@@ -414,63 +418,89 @@ void halffloatAdd(z, Ctxt in1*, Ctxt in2*, pubkey_){
 //-----------------------STILL IN PROCESS------------------------------------------
 
 //-----------------------Part 3 ------------------------------
-  Add(mantisaSum, co, smallInman, bigInman, 13, pubkey_); //adding the mantisas together
+  Add(mantisaSum, co, smallInman, bigInman, smallZero, st, 13); //adding the mantisas together
 //----------------------Part 4 -------------------------------
   //Normalizing for Carry Out
-  roundNormalize(finalSum, tempexpoCo, co, mantisaSumcarryo, mantisaSum, expoOne, tempexpo, pubkey_);
+  roundNormalize(finalSum, tempexpoCo, mantisaSumcarryo, co, mantisaSum, expoOne, tempexpo, smallZero, st);
 //----------------------Part 5 -------------------------------------
-  OR(roundhold, finalSum[2], finalSum[0], pubkey_);
-  AND(roundhold, roundhold, finalSum[1], pubkey_);  //if all are 1, then make round temp 1, so you will round
+  Or(*roundhold, finalSum[2], finalSum[0], st[3]);
+  And(*roundhold, roundhold, finalSum[1], st[3]);  //if all are 1, then make round temp 1, so you will round
 
-  Add(finalSumRound, co, finalSum, fullOne, pubkey_); //adds one to the answer
-  MUX(finalSum, finalSumRound, finalSum, pubkey_); //select the correct finalSum
+  Add(finalSumRound, co, finalSum, fullOne, zero, st, 19); //adds one to the answer
+  Mux(finalSum, finalSumRound, finalSum, co, st, 19); //select the correct finalSum using co as select
 
   //cut off round bits
-  removeRound(z, finalSum, 19, pubkey_);
+  removeRound(z, finalSum, 19, st);
   
   //*insert clause for when mantisa is all ones and need to round up 
+
 }
 
 
 
+void roundNormalize(Ctxt* finalSum, Ctxt* tempexpoCo, Ctxt* mantisaCosum, Ctxt* co, Ctxt* mantisaSum, Ctxt* expoOne, Ctxt* tempexpo, Ctxt* smallZero, Stream* st){
+  Shift(mantisaCosum, mantisaSum, smallZero, 10, 1, st);   // if carry out, shift mantisa right by 1    ***note, may be interpretting "product" wrong in the algorithm description***
+  Add(tempexpoCo, co, tempexpo, expoOne, smallZero, st, 5);  // expoOne is just a 5 bit number 00001 to add to tempexpo
 
-void roundNormalize(Ctxt* tempexpoCo, Ctxt* mantisaCosum, Ctxt co, Ctxt* mantisaSum, Ctxt* exopoOne, Ctxt* tempexpo, , pubkey_){
-  Shift(mantisaCosum, mantisaSum, 10, 1);   // if carry out, shift mantisa right by 1    ***note, may be interpretting "product" wrong in the algorithm description***
-  Add(tempexpoCo, tempexpo, expoOne, co, 5, pubkey);  // expoOne is just a 5 bit number 00001 to add to tempexpo
-
-  MUX(tempexpo, tempexpocarry, tempexpo, co, pubkey_, 5); //chose to use the added exponent or not
-  MUX(mantisaSum, mantisaCosum, mantisaSum, co, pubkey_, 13); //chosing the correct mantisa
-  for(i=0; i<19; i++){
-    if(i<13)
+  Mux(tempexpo, tempexpoCo, tempexpo, co, st, 5); //chose to use the added exponent or not
+  Mux(mantisaSum, mantisaCosum, mantisaSum, co, st, 13); //chosing the correct mantisa
+  for(int i=0; i<19; i++){
+    if(i<13){
       finalSum[i] = mantisaSum[i];
-    else
+    }
+    else{
       finalSum[i] = tempexpoCo[i+13];
+    }
   }
 }
 
-void normShift(Ctxt* smallOut, ctxt* smallIn, n, nshift){
-
-  for(i = 0; i<(n-nshift); i++){
-    Copy(smallOut[i], in[nshift+i]);
+void normShift(Ctxt* smallOut, Ctxt* smallIn, Ctxt* smallZero, uint8_t n, int nshift, Stream* st){
+  int temp = (n-nshift);
+  for(int i = 0; i<(temp); i++){
+    Copy(smallOut[i], smallIn[nshift+i], st[i]);
   }
-  for(i=(n-nshift); i<n; i++;){
-    Copy(smallOut[i], Ctxt* zero);
-  }
-}
-
-void Shift(Ctxt* smallOut, ctxt* smallIn, n, nshift){
-
-  for(i = 0; i<(n-nshift); i++){
-    Copy(smallOut[i+3], in[nshift+i]);
-  }
-  for(i=(n-nshift); i<n; i++;){
-    Copy(smallOut[i+3], Ctxt* zero);
+  for(int i= temp; i < n; i++){
+    Copy(smallOut[i], smallZero, st[i]);
   }
 }
 
-void removeRound(Ctxt* withoutround, Ctxt* withround, n, pubkey_){
-  for(i = 3; i < n; i++){
+void Shift(Ctxt* smallOut, Ctxt* smallIn, Ctxt* smallZero, uint8_t n, int nshift, Stream* st){
+  int temp = (n-nshift);
+  for(int i = 0; i<(temp); i++){
+    Copy(smallOut[i+3], smallIn[nshift+i], st[i]);
+  }
+  for(int i=(temp); i<n; i++){
+    Copy(smallOut[i+3], smallZero, st[i]);
+  }
+}
+
+void removeRound(Ctxt* withoutround, Ctxt* withround, uint8_t n, Stream* st){
+  for(int i = 3; i < n; i++){
     withoutround[i-3] = withround[i];
+  }
+}
+
+void initZero(Ctxt* ct, const int ln, Stream* st) {
+  Ctxt* ct1 = new Ctxt[ln];
+
+  for(int i = 0; i < ln; i++) {
+    Not(ct1[i], ct[i], st[i]);
+  }
+
+  for(int i = 0; i < ln; i++) {
+    And(ct[i], ct[i], ct1[i], st[i]);
+  }
+}
+
+void initOne(Ctxt* ct, const int ln, Stream* st) {
+  Ctxt* ct1 = new Ctxt[ln];
+
+  for(int i = 0; i < ln; i++) {
+    Not(ct1[i], ct[i], st[i]);
+  }
+
+  for(int i = 0; i < ln; i++) {
+    Nand(ct[i], ct[i], ct1[i], st[i]);
   }
 }
 } // namespace cufhe
