@@ -362,6 +362,7 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
   initZero(zero, 13, st);   //make =0
   initZero(zero, 1, st);
   initOne(negcheck, 13, st);     //make =1
+  small out int to zero
   //part4 
   initOne(one, 1, st);
   initZero(expoOne, 1, st);
@@ -376,8 +377,8 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
     in2exp[i] = in2[9+i];
   }
   for(int i = 0; i< 10; i++){             
-    in1mantisaR[i] = in1[i+3];  //leae last 3 bits for the round bits
-    in2mantisaR[i] = in2[i+3];
+    in1mantisaR[i+3] = in1[i];  //leae last 3 bits for the round bits
+    in2mantisaR[i+3] = in2[i];
   }
 
 //--------------------------PART 1-----------------------------
@@ -397,7 +398,7 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 
 //-------------------------PART 2-------------------------------
 //-----------------------------------
-  Xor(expsum[4], expsum [4], negcheck, st[2]); //make sure it is positive
+//  Xor(expsum[4], expsum [4], negcheck, st[2]); //make sure it is positive
 ///----------------------------- IDK if this is needed, basicly its checking if the value is negative, meaning we could have to shift differently? probs not
 
   for(int i=0; i <= 10; i++){
@@ -410,7 +411,7 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
       Copy(smallOut[1][i], smallInman[i-2], st[8]);  //round
       Copy(smallOut[0][i], smallInman[i-3], st[9]);  //stickey
 //ISSUES-------------------------------------
-      //Or(Ctxt smallOut[0][i], Ctxt smallOut[0][i], Ctxt smallOut[0][i-1], st); //ORing the sticky together
+      Or(smallOut[0][i], smallOut[0][i], smallOut[0][i-1], st[0]); //ORing the sticky together
     }
   }
 //-----------------------THIS IS THE 10 BIT MUX RIGHT HERE-----------------------------
@@ -449,7 +450,7 @@ void roundNormalize(Ctxt* finalSum, Ctxt* tempexpoCo, Ctxt* mantisaCosum, Ctxt* 
       finalSum[i] = mantisaSum[i];
     }
     else{
-      finalSum[i] = tempexpoCo[i+13];
+      finalSum[i] = tempexpo[i+13];
     }
   }
 }
