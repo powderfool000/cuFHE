@@ -40,19 +40,23 @@ void CleanUp() {
 }
 
 inline void CtxtCopyH2D(const Ctxt& c, Stream st) {
-  cudaMemcpyAsync(c.lwe_sample_device_->data(),
-                  c.lwe_sample_->data(),
-                  c.lwe_sample_->SizeData(),
-                  cudaMemcpyHostToDevice,
-                  st.st());
+  if (c.lwe_sample_ != nullptr) {
+    cudaMemcpyAsync(c.lwe_sample_device_->data(),
+                    c.lwe_sample_->data(),
+                    c.lwe_sample_->SizeData(),
+                    cudaMemcpyHostToDevice,
+                    st.st());
+  }
 }
 
 inline void CtxtCopyD2H(const Ctxt& c, Stream st) {
-  cudaMemcpyAsync(c.lwe_sample_->data(),
-                  c.lwe_sample_device_->data(),
-                  c.lwe_sample_->SizeData(),
-                  cudaMemcpyDeviceToHost,
-                  st.st());
+  if (c.lwe_sample_ != nullptr) {
+    cudaMemcpyAsync(c.lwe_sample_->data(),
+                    c.lwe_sample_device_->data(),
+                    c.lwe_sample_->SizeData(),
+                    cudaMemcpyDeviceToHost,
+                    st.st());
+  }
 }
 
 void Nand(Ctxt& out,

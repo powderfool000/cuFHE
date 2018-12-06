@@ -58,10 +58,7 @@ int main() {
   cudaGetDeviceProperties(&prop, 0);
   uint32_t kNumSMs = prop.multiProcessorCount;
 
-  bootDeviceAllocator(2048, 128);
-  bootHostAllocator(2048, 128);
-
-  uint8_t N = 16;
+  uint8_t N = 8;
 
   SetSeed();  // set random seed
 
@@ -76,6 +73,9 @@ int main() {
   Ctxt* ctz = new Ctxt[N]; // output
   Ctxt* ctc = new Ctxt[N]; // carry
   Ctxt* cts = new Ctxt;
+
+  bootDeviceAllocator(2048, 128);
+  bootHostAllocator(2048, 128);
 
   cout<< "------ Key Generation ------" <<endl;
   PriKey pri_key;
@@ -122,7 +122,7 @@ int main() {
 
   // add_n(ctz, ctc, cta, ctb, pub_key, N);
 
-  Add(ctz, ctc, cta, ctb, st, N, kNumSMs);
+  Add(ctz, ctc, cta, ctb, st, N, 9);
   // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
   // Mux(ctz, cta, ctb, cts, pub_key, N);
   // Sub(ctz, ctc, cta, ctb, pub_key, N);
@@ -159,6 +159,9 @@ int main() {
 
   cudaProfilerStop();
   
+  haltHostAllocator();
+  haltDeviceAllocator();
+
   delete [] pta;
   delete [] ptb;
   delete [] ptz;
@@ -166,9 +169,6 @@ int main() {
   delete [] ctb;
   delete [] ctz;
   delete [] ctc;
-
-  haltHostAllocator();
-  haltDeviceAllocator();
 
   return 0;
 }

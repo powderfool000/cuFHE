@@ -191,14 +191,14 @@ void HostAllocator::freeAll() {
 std::pair<void*, MemoryDeleter> AllocatorCPU::New(size_t nbytes) {
   void* ptr = nullptr;
   if (hostAllocatorIsOn()) {
-  	ptr = hostMalloc(nbytes);
+  	// ptr = hostMalloc(nbytes);
   } else {
   	CuSafeCall(cudaMallocHost(&ptr, nbytes));
   }
   return {ptr, Delete};
 }
 
-void AllocatorCPU::Delete(void* ptr) { if (deviceAllocatorIsOn()) { hostFree(ptr); } else { CuSafeCall(cudaFreeHost(ptr)); } }
+void AllocatorCPU::Delete(void* ptr) { if (deviceAllocatorIsOn()) { /*hostFree(ptr);*/ } else { CuSafeCall(cudaFreeHost(ptr)); } }
 
 MemoryDeleter AllocatorCPU::GetDeleter() { return Delete; }
 
