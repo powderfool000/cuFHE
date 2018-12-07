@@ -89,6 +89,8 @@ void removeRound(Ctxt* withoutround, Ctxt* withround, uint8_t n, Stream* st);
 void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st);
 void initZero(Ctxt* ct, const int ln, Stream* st);
 void initOne(Ctxt* ct, const int ln, Stream* st);
+//test functions only
+void floatPartOne(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st);
 // Not Ready...
 // void Mux(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const Ctxt& in2,
 //          cudaStream_t st = 0);

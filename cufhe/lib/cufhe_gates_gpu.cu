@@ -412,7 +412,6 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
       Copy(smallOut[2][i], smallInman[i-1], st[7]);  //guard
       Copy(smallOut[1][i], smallInman[i-2], st[8]);  //round
       Copy(smallOut[0][i], smallInman[i-3], st[9]);  //stickey
-//ISSUES-------------------------------------
       Or(smallOut[0][i], smallOut[0][i], smallOut[0][i-1], st[0]); //ORing the sticky together
     }
   }
@@ -505,5 +504,75 @@ void initOne(Ctxt* ct, const int ln, Stream* st) {
   for(int i = 0; i < ln; i++) {
     Nand(ct[i], ct[i], ct1[i], st[i]);
   }
+}
+
+
+
+void floatPartOne(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
+  int ns = 10;
+  //Part 1
+  Ctxt smallZero;
+  Ctxt one; // a simple holder for one
+  Ctxt expsum[5];  //for the exponent subtraction
+  Ctxt negcheck;   //for checking which exponent is larger
+  Ctxt tempexpo[5];  //tentative exponent  
+  Ctxt in1exp [5]; //exponent of in1
+  Ctxt in2exp [5]; //exponent of in2
+  //Ctxt zero;     //a zero for shifting
+  Ctxt smallIn[16]; //holder for the smaller input
+  Ctxt bigIn[16];  //holder for the larger input
+  Ctxt smallInman[13]; //holder for smaller input mantisa
+  Ctxt bigInman[13];   //holder for the bigger input mantisa
+
+   //Part 2
+  Ctxt in1mantisaR[13];  //Used for holding the round bits, and adding
+  Ctxt in2mantisaR[13];  //Used for holding the round bits, and adding
+  Ctxt smallOut[13][10]; //smaller output 
+
+
+  //--------------------Zero and One Inililiations----
+  initZero(in1mantisaR, 13, st); //need to initialize to 0 for the round bits to be 0
+  initZero(in2mantisaR, 13, st); //need to initialize to 0 for the round bits to be 0
+  //initZero(&zero, 13, st);   //make =0
+  initZero(&smallZero, 1, st);
+  initOne(&negcheck, 1, st);     //make =1
+  for(int i = 0; i <13; i++){
+    initZero(smallOut[i], 5, st);
+  }
+  for(int i = 0; i < 5; i++){
+    in1exp[i] = in1[9+i];
+    in2exp[i] = in2[9+i];
+  }
+  for(int i = 0; i< 10; i++){             
+    in1mantisaR[i+3] = in1[i];  //leae last 3 bits for the round bits
+    in2mantisaR[i+3] = in2[i];
+  }
+
+  //--------------------------PART 1-----------------------------
+
+  Sub(expsum, &smallZero, in1exp, in2exp, st, 5); // subtract the first exponentes
+
+  //check if negative to determine which exponent is larger
+
+  And(negcheck, &negcheck, expsum[4], st[1]);
+
+//if "negcheck" is positive, then input2 is larger, else input1 larger. 
+  Mux(tempexpo, in1exp, in2exp, &negcheck, st, 5);       //make tempexpo into whichever exponent is higher 
+  Mux(smallIn, in2, in1,  &negcheck, st, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
+  Mux(bigIn, in1, in2, &negcheck, st, 16);            // which input is bigger
+  Mux(smallInman, in2mantisaR, in1mantisaR, &negcheck, st, 13);  //chose the smaller mantisa
+  Mux(bigInman, in1mantisaR, in2mantisaR,  &negcheck, st, 13);    //chose the larger mantisa
+
+  //for testing purpouses only
+  for(int i = 3; i<19; i++){
+    if(i<13){
+      Copy(z[i], smallInman[i], st[i]);
+    }
+    else{
+      Copy(z[i], expsum[i], st[i-13]);
+    }
+  }
+
+  Synchronize(); 
 }
 } // namespace cufhe

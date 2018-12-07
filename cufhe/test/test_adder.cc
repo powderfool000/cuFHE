@@ -78,7 +78,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 8;
+  uint8_t N = 16;
 
   SetSeed();  // set random seed
 
@@ -134,7 +134,7 @@ int main() {
   // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
   // Mux(ctz, cta, ctb, cts, pub_key, N);
   // Sub(ctz, ctc, cta, ctb, pub_key, N);
-  Div(ctz, cta, ctb, pub_key, N);
+  floatPartOne(ctz, cta, ctb, st);
 
   // Ctxt* p0 = new Ctxt[8];
   // Ctxt* p1 = new Ctxt[8];
