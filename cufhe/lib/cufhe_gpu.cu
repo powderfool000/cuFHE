@@ -25,6 +25,9 @@
 
 namespace cufhe {
 
+Ctxt ct_zero;
+Ctxt ct_one;
+
 uint32_t cnt = 0;
 
 Ctxt::Ctxt(bool is_alias) {

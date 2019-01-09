@@ -86,9 +86,9 @@ int main() {
   cout<< "------ Adder Test ------" <<endl;
 
   init_ptxt(pts, 1, 1);
-  init_ptxt(pta, 8, N);
-  init_ptxt(ptb, 3, N);
-
+  init_ptxt(pta, 0x4400, N); 
+  init_ptxt(ptb, 0x4200, N);
+//should get 0x4700
   cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
   cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
 
@@ -114,6 +114,7 @@ int main() {
 
   // add_n(ctz, ctc, cta, ctb, pub_key, N);
 
+  //AND(ctz, ctc, cta, )
   floatPartOne(ctz, cta, ctb, st);
   // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
   // Mux(ctz, cta, ctb, cts, pub_key, N);

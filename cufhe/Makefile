@@ -40,7 +40,7 @@ targets: $(DIR_BIN)/libcufhe_cpu.so $(DIR_BIN)/libcufhe_gpu.so \
 ##
 all: $(targets)
 cpu: $(DIR_BIN)/libcufhe_cpu.so $(DIR_BIN)/test_api_cpu $(DIR_BIN)/test_adder
-gpu: $(DIR_BIN)/libcufhe_gpu.so $(DIR_BIN)/test_api_gpu $(DIR_BIN)/test_adder_gpu
+gpu: $(DIR_BIN)/libcufhe_gpu.so $(DIR_BIN)/test_api_gpu $(DIR_BIN)/test_adder_gpu 
 python_cpu: $(DIR_BIN)/libcufhe_cpu.so $(DIR_PY)/fhepy_cpu.so
 python_gpu: $(DIR_BIN)/libcufhe_gpu.so $(DIR_PY)/fhepy_gpu.so
 clean:

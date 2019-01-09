@@ -31,7 +31,7 @@ namespace cufhe {
 
 Param kParam = {
   500,
-  1024,
+  32,
   1,
   10,
   2,

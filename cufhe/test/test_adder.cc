@@ -26,6 +26,9 @@ using namespace cufhe;
 
 #include <iostream>
 using namespace std;
+#include <chrono>
+#include <ctime>
+#include <ratio>
 
 Ctxt cufhe::ct_zero;
 Ctxt cufhe::ct_one;
@@ -107,6 +110,9 @@ int main() {
 
   cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
   cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
+  //   Stream* st = new Stream[N];
+  // for (int i = 0; i < 16; i ++)
+  //   st[i].Create();
 
   // Encrypt
   cout<< "Encrypting..."<<endl;
@@ -127,14 +133,16 @@ int main() {
 
   // Calculate
   cout<< "Calculating..."<<endl;
+  high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
   // add_n(ctz, ctc, cta, ctb, pub_key, N);
 
-  // Add(ctz, ctc, cta, ctb, pub_key, N);
-  // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
+  Add(ctz, ctc, cta, ctb, pub_key, N);
+  //floatPartOne(ctz, cta, ctb, st);
+  //Add(ctz, ctc, cta, ctb, cts, pub_key, N);
   // Mux(ctz, cta, ctb, cts, pub_key, N);
   // Sub(ctz, ctc, cta, ctb, pub_key, N);
-  floatPartOne(ctz, cta, ctb, st);
+  //floatPartOne(ctz, cta, ctb, st);
 
   // Ctxt* p0 = new Ctxt[8];
   // Ctxt* p1 = new Ctxt[8];
@@ -152,6 +160,9 @@ int main() {
   // }
 
   // Decrypt
+  high_resolution_clock::time_point t2 = high_resolution_clock::now();
+  double tout = t2-t1;
+  count<< "Time Taken: =" << tout <<endl;
   cout<< "Decrypting"<<endl;
   for (int i = N-1; i >= 0; i--) {
     Decrypt(ptz[i], ctz[i], pri_key);

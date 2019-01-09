@@ -385,18 +385,18 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 
 //--------------------------PART 1-----------------------------
 
-  Sub(expsum, &smallZero, in1exp, in2exp, st, 5); // subtract the first exponentes
+  Sub(expsum, &smallZero, in1exp, in2exp, st, 5, ns); // subtract the first exponentes
 
   //check if negative to determine which exponent is larger
 
   And(negcheck, &negcheck, expsum[4], st[1]);
 
 //if "negcheck" is positive, then input2 is larger, else input1 larger. 
-  Mux(tempexpo, in1exp, in2exp, &negcheck, st, 5);       //make tempexpo into whichever exponent is higher 
-  Mux(smallIn, in2, in1,  &negcheck, st, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
-  Mux(bigIn, in1, in2, &negcheck, st, 16);            // which input is bigger
-  Mux(smallInman, in2mantisaR, in1mantisaR, &negcheck, st, 13);  //chose the smaller mantisa
-  Mux(bigInman, in1mantisaR, in2mantisaR,  &negcheck, st, 13);    //chose the larger mantisa
+  Mux(tempexpo, in1exp, in2exp, &negcheck, st, 5, ns);       //make tempexpo into whichever exponent is higher 
+  Mux(smallIn, in2, in1,  &negcheck, st, 16,ns);            //chosing which input is the "smaller" one , aka the one with smaller input
+  Mux(bigIn, in1, in2, &negcheck, st, 16, ns);            // which input is bigger
+  Mux(smallInman, in2mantisaR, in1mantisaR, &negcheck, st, 13, ns);  //chose the smaller mantisa
+  Mux(bigInman, in1mantisaR, in2mantisaR,  &negcheck, st, 13, ns);    //chose the larger mantisa
 
 //-------------------------PART 2-------------------------------
 //-----------------------------------
@@ -420,16 +420,16 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 //-----------------------STILL IN PROCESS------------------------------------------
 
 //-----------------------Part 3 ------------------------------
-  Add(mantisaSum, co, smallInman, bigInman, &smallZero, st, 13); //adding the mantisas together
+  Add(mantisaSum, co, smallInman, bigInman, &smallZero, st, 13, ns); //adding the mantisas together
 //----------------------Part 4 -------------------------------
   //Normalizing for Carry Out
-  roundNormalize(finalSum, tempexpoCo, mantisaSumcarryo, co, mantisaSum, expoOne, tempexpo, &smallZero, st);
+  roundNormalize(finalSum, tempexpoCo, mantisaSumcarryo, co, mantisaSum, expoOne, tempexpo, &smallZero, st, ns);
 //----------------------Part 5 -------------------------------------
   Or(roundhold, finalSum[2], finalSum[0], st[3]);
   And(roundhold, &roundhold, finalSum[1], st[3]);  //if all are 1, then make round temp 1, so you will round
 
-  Add(finalSumRound, co, finalSum, fullOne, &smallZero, st, 19); //adds one to the answer
-  Mux(finalSum, finalSumRound, finalSum, co, st, 19); //select the correct finalSum using co as select
+  Add(finalSumRound, co, finalSum, fullOne, &smallZero, st, 19, ns); //adds one to the answer
+  Mux(finalSum, finalSumRound, finalSum, co, st, 19, ns); //select the correct finalSum using co as select
 
   //cut off round bits
   removeRound(z, finalSum, 19, st);
@@ -440,12 +440,11 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 
 
 
-void roundNormalize(Ctxt* finalSum, Ctxt* tempexpoCo, Ctxt* mantisaCosum, Ctxt* co, Ctxt* mantisaSum, Ctxt* expoOne, Ctxt* tempexpo, Ctxt* smallZero, Stream* st){
+void roundNormalize(Ctxt* finalSum, Ctxt* tempexpoCo, Ctxt* mantisaCosum, Ctxt* co, Ctxt* mantisaSum, Ctxt* expoOne, Ctxt* tempexpo, Ctxt* smallZero, Stream* st, uint8_t ns){
   Shift(mantisaCosum, mantisaSum, smallZero, 10, 1, st);   // if carry out, shift mantisa right by 1    ***note, may be interpretting "product" wrong in the algorithm description***
-  Add(tempexpoCo, co, tempexpo, expoOne, smallZero, st, 5);  // expoOne is just a 5 bit number 00001 to add to tempexpo
-
-  Mux(tempexpo, tempexpoCo, tempexpo, co, st, 5); //chose to use the added exponent or not
-  Mux(mantisaSum, mantisaCosum, mantisaSum, co, st, 13); //chosing the correct mantisa
+  Add(tempexpoCo, co, tempexpo, expoOne, smallZero, st, 5, ns);  // expoOne is just a 5 bit number 00001 to add to tempexpo
+  Mux(tempexpo, tempexpoCo, tempexpo, co, st, 5, ns); //chose to use the added exponent or not
+  Mux(mantisaSum, mantisaCosum, mantisaSum, co, st, 13, ns); //chosing the correct mantisa
   for(int i=0; i<19; i++){
     if(i<13){
       finalSum[i] = mantisaSum[i];
@@ -550,18 +549,18 @@ void floatPartOne(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 
   //--------------------------PART 1-----------------------------
 
-  Sub(expsum, &smallZero, in1exp, in2exp, st, 5); // subtract the first exponentes
+  Sub(expsum, &smallZero, in1exp, in2exp, st, 5, ns); // subtract the first exponentes
 
   //check if negative to determine which exponent is larger
 
   And(negcheck, &negcheck, expsum[4], st[1]);
 
 //if "negcheck" is positive, then input2 is larger, else input1 larger. 
-  Mux(tempexpo, in1exp, in2exp, &negcheck, st, 5);       //make tempexpo into whichever exponent is higher 
-  Mux(smallIn, in2, in1,  &negcheck, st, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
-  Mux(bigIn, in1, in2, &negcheck, st, 16);            // which input is bigger
-  Mux(smallInman, in2mantisaR, in1mantisaR, &negcheck, st, 13);  //chose the smaller mantisa
-  Mux(bigInman, in1mantisaR, in2mantisaR,  &negcheck, st, 13);    //chose the larger mantisa
+  Mux(tempexpo, in1exp, in2exp, &negcheck, st, 5, ns);       //make tempexpo into whichever exponent is higher 
+  Mux(smallIn, in2, in1,  &negcheck, st, 16, ns);            //chosing which input is the "smaller" one , aka the one with smaller input
+  Mux(bigIn, in1, in2, &negcheck, st, 16, ns);            // which input is bigger
+  Mux(smallInman, in2mantisaR, in1mantisaR, &negcheck, st, 13, ns);  //chose the smaller mantisa
+  Mux(bigInman, in1mantisaR, in2mantisaR,  &negcheck, st, 13,ns);    //chose the larger mantisa
 
   //for testing purpouses only
   for(int i = 3; i<19; i++){
