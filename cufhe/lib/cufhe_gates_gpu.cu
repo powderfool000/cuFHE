@@ -197,6 +197,25 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n, uint8_t 
   }
 }
 
+// void BigMux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* in2, Ctxt* in3, Ctxt* in4, Ctxt* in5, Ctxt* in6, Ctxt* in7, Ctxt* in8, Ctxt* in9, Ctxt* s, Stream* st, uint8_t n, uint8_t ns) {
+//   Ctxt p0[n];
+//   Ctxt p1[n];
+//   Ctxt is;
+
+//   Not(is, *s, st[0]);
+
+//   Synchronize();
+
+//   for (uint8_t i = 0; i < n; i++) {
+//     And(p0[i], in0[i], is, st[i]);
+//     And(p1[i], in1[i], *s, st[(2*i)%ns]);
+//   }
+
+//   for (uint8_t i = 0; i < n; i++) {
+//     Or(z[i], p0[i], p1[i], st[i]);
+//   }
+// }
+
 void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns) {
   Ctxt t0[(n+1)/2], t1[(n+1)/2];
   Ctxt c0[(n+1)/2], c1[(n+1)/2];
@@ -338,7 +357,7 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
   //Part 2
   Ctxt in1mantisaR[13];  //Used for holding the round bits, and adding
   Ctxt in2mantisaR[13];  //Used for holding the round bits, and adding
-  Ctxt smallOut[13][10]; //smaller output 
+  Ctxt smallOut[13][11]; //smaller output -- maybe needs to be 11
 
   //Part 3
   Ctxt mantisaSum[13]; //sum of the two mantisas
@@ -438,8 +457,6 @@ void halffloatAdd(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
 
 }
 
-
-
 void roundNormalize(Ctxt* finalSum, Ctxt* tempexpoCo, Ctxt* mantisaCosum, Ctxt* co, Ctxt* mantisaSum, Ctxt* expoOne, Ctxt* tempexpo, Ctxt* smallZero, Stream* st, uint8_t ns){
   Shift(mantisaCosum, mantisaSum, smallZero, 10, 1, st);   // if carry out, shift mantisa right by 1    ***note, may be interpretting "product" wrong in the algorithm description***
   Add(tempexpoCo, co, tempexpo, expoOne, smallZero, st, 5, ns);  // expoOne is just a 5 bit number 00001 to add to tempexpo
@@ -526,7 +543,7 @@ void floatPartOne(Ctxt* z, Ctxt* in1, Ctxt* in2, Stream* st) {
    //Part 2
   Ctxt in1mantisaR[13];  //Used for holding the round bits, and adding
   Ctxt in2mantisaR[13];  //Used for holding the round bits, and adding
-  Ctxt smallOut[13][10]; //smaller output 
+  Ctxt smallOut[13][11]; //smaller output 
 
 
   //--------------------Zero and One Inililiations----
