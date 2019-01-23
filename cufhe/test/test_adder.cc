@@ -21,8 +21,6 @@
  */
 
 // Include these two files for CPU computing.
-#include <include/cufhe_cpu.h>
-using namespace cufhe;
 
 #include <iostream>
 using namespace std;
@@ -30,156 +28,67 @@ using namespace std;
 #include <ctime>
 #include <ratio>
 
-Ctxt cufhe::ct_zero;
-Ctxt cufhe::ct_one;
 
-// Full adder without carry in
-void full_adder(Ctxt& z, Ctxt& co, Ctxt& a, Ctxt& b, PubKey& pub_key) {
-  And(co, a, b, pub_key);
-  Xor(z, a, b, pub_key);
-}
 
-// Full adder with carry in
-void full_adder(Ctxt& z, Ctxt& co, Ctxt& a, Ctxt& b, Ctxt& ci, PubKey& pub_key) {
-  Or(co, a, b, pub_key);
-  And(co, ci, co, pub_key);
-  And(z, a, b, pub_key);
-  Or(co, co, z, pub_key);
+void Mux(int* out, int* inp1, int* inp2, int sel, int n){
+  int p0[n];
+  int p1[n];
+  int is;
 
-  Xor(z, a, b, pub_key);
-  Xor(z, ci, z, pub_key);
-}
-
-// N bit adder with overflow
-void add_n(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, PubKey& pub_key, uint8_t n) {
-  full_adder(z[0], c[0], a[0], b[0], pub_key);
-
-  for (int i = 1; i < n; i++) {
-    full_adder(z[i], c[i], a[i], b[i], c[i-1], pub_key);
-  }
-}
-
-// Initialize a plaintext array
-void init_ptxt(Ptxt* p, int8_t x, uint8_t n) {
+  is = !sel;
   for (int i = 0; i < n; i++) {
-    p[i].message_ = x & 0x1;
-    x >>= 1;
+    p0[i] = inp1[i] * is;
+    p1[i] = inp2[i] * sel;
+  }
+
+  for (int i = 0; i < n; i++) {
+    out[i] = p1[i] + p0[i];
   }
 }
 
-int8_t dump_ptxt(Ptxt* p, uint8_t n) {
-  int8_t out = 0;
 
-  for (int i = n-1; i >= 0; i--) {
-    cout<<p[i].message_;
-    out |= p[i].message_ << i;
-  }
+void sixteenMux(int* out, int in[][10], int* sel, int size, int n){
+  int out1[n/2][size];
+  int out2[n/4][size];
+  int out3[n/8][size];
 
-  cout<<endl;
-
-  return out;
+cout <<"sixteen Mux in 0-16 is: "<<endl;
+//  for(int i =0; i < 16; i ++){
+//  cout<< in[i][i] << endl;
+//  }
+ cout<< *in[1] << endl;
+cout <<"Mux 1: "<<endl;
+for(int i=0; i< ((n/2)); i++){
+    Mux(out1[i], in[i], in[(n/2) + i], sel[0], size);
+    cout<< out1[i][i] <<endl;
+}
+  cout<<"done one"<<endl;
+for(int i=0; i< ((n/4)); i++){
+   Mux(out2[i], out1[i], out1[(n/4) + i], sel[1], size);
+ }
+for(int i=0; i< ((n/8)); i++){
+  Mux(out3[i], out2[i], out2[(n/8) + i], sel[2], size);
+}
+for(int i=0; i< ((n/16)); i++){
+  Mux(out, out3[0], out3[(n/16  + i)], sel[3], size);
+}
 }
 
 int main() {
-  uint8_t N = 16;
+ int inp1[6] = {0,0,1,0,0,0};
+ int inp2[6] = {0,0,0,0,0,0};
+ int sel = 0;
+ int out[6];
 
-  SetSeed();  // set random seed
-
-  // plaintext
-  Ptxt* pta = new Ptxt[N]; // input a
-  Ptxt* ptb = new Ptxt[N]; // input b
-  Ptxt* ptz = new Ptxt[N]; // output
-  Ptxt* pts = new Ptxt;
-
-  Ctxt* cta = new Ctxt[N]; // input a
-  Ctxt* ctb = new Ctxt[N]; // input b
-  Ctxt* ctz = new Ctxt[N]; // output
-  Ctxt* ctc = new Ctxt[N]; // carry
-  Ctxt* cts = new Ctxt;
-
-  cout<< "------ Key Generation ------" <<endl;
-  PriKey pri_key;
-  PubKey pub_key;
-  KeyGen(pub_key, pri_key);
-
-  cout<< "------ Adder Test ------" <<endl;
-
-  init_ptxt(pts, 1, 1);
-  init_ptxt(pta, 8, N);
-  init_ptxt(ptb, 3, N);
-
-  cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
-  cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
-  //   Stream* st = new Stream[N];
-  // for (int i = 0; i < 16; i ++)
-  //   st[i].Create();
-
-  // Encrypt
-  cout<< "Encrypting..."<<endl;
-  for (int i = N-1; i >= 0; i--) {
-    Encrypt(cta[i], pta[i], pri_key);
-    Encrypt(ctb[i], ptb[i], pri_key);
-  }
-
-  Encrypt(*cts, *pts, pri_key);
-
-  Ptxt* pt_one = new Ptxt;
-  Ptxt* pt_zero = new Ptxt;
-  init_ptxt(pt_zero, 0, 1);
-  init_ptxt(pt_one, 1, 1);
-
-  Encrypt(ct_zero, *pt_zero, pri_key);
-  Encrypt(ct_one, *pt_one, pri_key);
-
-  // Calculate
-  cout<< "Calculating..."<<endl;
-  high_resolution_clock::time_point t1 = high_resolution_clock::now();
-
-  // add_n(ctz, ctc, cta, ctb, pub_key, N);
-
-  Add(ctz, ctc, cta, ctb, pub_key, N);
-  //floatPartOne(ctz, cta, ctb, st);
-  //Add(ctz, ctc, cta, ctb, cts, pub_key, N);
-  // Mux(ctz, cta, ctb, cts, pub_key, N);
-  // Sub(ctz, ctc, cta, ctb, pub_key, N);
-  //floatPartOne(ctz, cta, ctb, st);
-
-  // Ctxt* p0 = new Ctxt[8];
-  // Ctxt* p1 = new Ctxt[8];
-  // Ctxt* is = new Ctxt;
-
-  // Not(*is, *cts);
-
-  // for (uint8_t i = 0; i < N; i++) {
-  //   And(p0[i], cta[i], *is, pub_key);
-  //   And(p1[i], ctb[i], *cts, pub_key);
-  // }
-
-  // for (uint8_t i = 0; i < N; i++) {
-  //   Or(ctz[i], p0[i], p1[i], pub_key);
-  // }
-
-  // Decrypt
-  high_resolution_clock::time_point t2 = high_resolution_clock::now();
-  double tout = t2-t1;
-  count<< "Time Taken: =" << tout <<endl;
-  cout<< "Decrypting"<<endl;
-  for (int i = N-1; i >= 0; i--) {
-    Decrypt(ptz[i], ctz[i], pri_key);
-  }
-
-  cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
-
-  Decrypt(pta[0], ctc[N-1], pri_key);
-
-  cout<<"carry out: "<<pta[0].message_<<endl;
-  
-  delete [] pta;
-  delete [] ptb;
-  delete [] ptz;
-  delete [] cta;
-  delete [] ctb;
-  delete [] ctz;
-  delete [] ctc;
-  return 0;
+ Mux(out, inp1, inp2, sel, 6);
+ int select[4] = {0,0,1,0};
+ int in[16][10] = {{1,0,0,0,0,0,0,0,0,0}, {0,1,0,0,0,0,0,0,0,0}, {0,0,1,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0},
+{0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}};
+ int outlong[10]; 
+ cout<< "Testing 16 to 1 Mux" << endl;
+ sixteenMux(outlong, in, select, 10, 16);
+  for(int i = 0; i < 10; i ++){
+   cout << outlong[i] << flush;
+ }
+ return 0;
 }
