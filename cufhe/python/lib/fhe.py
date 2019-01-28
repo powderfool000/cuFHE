@@ -191,6 +191,18 @@ class Ctxt:
         Encrypt(msg, prikey, self.pubkey_)
         return self
 
+    def MUX(self, result, inp1, inp2, sel):
+	sel2 = Ctxt(sel.pubkey_)
+	value1 = Ctxt(self.pubkey_)
+	value2 = Ctxt(self.pubkey_)
+	result = Ctxt(self.pubkey_)
+	st = Stream().Create()
+	NOT(sel2.ctxt_, sel.ctxt_, self.pubkey_)
+	AND(value1.ctxt_, inp1.ctxt_, sel2.ctxt_, st, self.pubkey_)
+	AND(value2.ctxt_, inp2.ctxt_, sel.ctx_, st, self.pubkey_)
+	OR(result.ctxt_, value1.ctxt_, value2.ctxt_, st, self.pubkey_)
+
+	
     def __and__(self, other):
         result = Ctxt(self.pubkey_)
         st = Stream().Create()

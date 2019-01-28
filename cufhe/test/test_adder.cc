@@ -74,51 +74,32 @@ for(int i=0; i< ((n/16)); i++){
 }
 }
 
-void floatAdder(int* out, int* in1, int* in2, int* bigIn){
-    int in1expo[5];
-    int in2expo[5];
-    int in1mantisaR[13];
-    int in2mantisaR[13];
-    int negcheck;
 
-    int tempexpo[5];
-    int smallIn[16];
-    //int bigIn[16];
-    int smallInman[13];
-    int bigInman[13];
-
-  for(int i = 0; i < 5; i++){
-    in1exp[i] = in1[9+i];
-    in2exp[i] = in2[9+i];
-  }
-  for(int i = 0; i< 10; i++){             
-    in1mantisaR[i+3] = in1[i];  //leae last 3 bits for the round bits
-    in2mantisaR[i+3] = in2[i];
-  }
-
-
-  exposum= in1exp - in2exp;
-
-  //check if negative to determine which exponent is larger
-  negcheck = expsum[4] & negcheck;
-
-//if "negcheck" is positive, then input2 is larger, else input1 larger. 
-  Mux(tempexpo, in1exp, in2exp, negcheck, 5);       //make tempexpo into whichever exponent is higher 
-  Mux(smallIn, in2, in1,  negcheck, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
-  Mux(bigIn, in1, in2, negcheck, 16);            // which input is bigger
-  Mux(smallInman, in2mantisaR, in1mantisaR, negcheck, 13); //chose the smaller mantisa
-  Mux(bigInman, in1mantisaR, in2mantisaR,  negcheck, 13);    //chose the larger mantisa
-
-
+void Shift(int smallout[], int smallin[], int smallzero, int n, int nshift) {
+	int temp = n - nshift;
+	for(int i = 0; i <= temp; i++) {
+		smallout[i] = smallin[nshift + i];
+	}
+	for(int i = (temp + 1); i < 13; i++) {
+		smallout[i] = smallzero;
+	}
 }
-int main() {
- int inp1[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
- int inp2[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
- cout<< "Testing 16 to 1 Mux" << endl;
- sixteenMux(outlong, in, select, 10, 16);
-  for(int i = 0; i < 10; i ++){
-   cout << outlong[i] << flush;
- }
- return 0;
+
+
+int main() {
+	int inp[13] = {0,0,1,0,0,0,0,0,0,1,0,0,1};
+	int outp[13];
+	int num = 12;
+	int num_shift = 2;
+	int smallz = 0;
+
+	Shift(outp, inp, 0, num, num_shift);
+
+	for(int i = 12; i >= 0; i--){
+		cout << outp[i] << flush;
+	}
+	cout << endl;
+
+	return 0;
 }
