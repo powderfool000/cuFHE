@@ -86,4 +86,6 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n);
 // void Mux(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const Ctxt& in2,
 //          cudaStream_t st = 0);
 
+void FpAdd(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st);
+
 } // namespace cufhe

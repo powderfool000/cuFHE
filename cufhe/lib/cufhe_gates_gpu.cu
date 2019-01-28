@@ -327,4 +327,28 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
   }
 }
 
+void FpAdd(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st) {
+  Ctxt es[5], ec[5];
+  Ctxt lgm[14], smm[14];
+
+  Sub(es, ec, a+10, b+10, st, 5); // Get difference of exponents
+
+  Mux(lgm+3, a, b, es, st, 10); // Select mantissa of larger number
+  Mux(smm+3, b, a, es, st, 10); // Select mantissa of smaller number
+
+  for (int i = 0; i < 3; i++) { // Zero out guard round and sticky
+    Copy(lgm[i], ct_zero);
+    Copy(smm[i], ct_zero);
+  }
+
+  Copy(lgm[13], ct_one); // Assume normalized for now
+  Copy(smm[13], ct_one);
+
+  // Shift smaller mantissa
+
+  // Add mantissas
+
+  // Normalize
+}
+
 } // namespace cufhe
