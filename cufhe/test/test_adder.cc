@@ -74,17 +74,47 @@ for(int i=0; i< ((n/16)); i++){
 }
 }
 
-int main() {
- int inp1[6] = {0,0,1,0,0,0};
- int inp2[6] = {0,0,0,0,0,0};
- int sel = 0;
- int out[6];
+void floatAdder(int* out, int* in1, int* in2, int* bigIn){
+    int in1expo[5];
+    int in2expo[5];
+    int in1mantisaR[13];
+    int in2mantisaR[13];
+    int negcheck;
 
- Mux(out, inp1, inp2, sel, 6);
- int select[4] = {0,0,1,0};
- int in[16][10] = {{1,0,0,0,0,0,0,0,0,0}, {0,1,0,0,0,0,0,0,0,0}, {0,0,1,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0},
-{0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}, {0,0,0,0,0,0,0,0,0,0}};
- int outlong[10]; 
+    int tempexpo[5];
+    int smallIn[16];
+    //int bigIn[16];
+    int smallInman[13];
+    int bigInman[13];
+
+  for(int i = 0; i < 5; i++){
+    in1exp[i] = in1[9+i];
+    in2exp[i] = in2[9+i];
+  }
+  for(int i = 0; i< 10; i++){             
+    in1mantisaR[i+3] = in1[i];  //leae last 3 bits for the round bits
+    in2mantisaR[i+3] = in2[i];
+  }
+
+
+  exposum= in1exp - in2exp;
+
+  //check if negative to determine which exponent is larger
+  negcheck = expsum[4] & negcheck;
+
+//if "negcheck" is positive, then input2 is larger, else input1 larger. 
+  Mux(tempexpo, in1exp, in2exp, negcheck, 5);       //make tempexpo into whichever exponent is higher 
+  Mux(smallIn, in2, in1,  negcheck, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
+  Mux(bigIn, in1, in2, negcheck, 16);            // which input is bigger
+  Mux(smallInman, in2mantisaR, in1mantisaR, negcheck, 13); //chose the smaller mantisa
+  Mux(bigInman, in1mantisaR, in2mantisaR,  negcheck, 13);    //chose the larger mantisa
+
+
+}
+int main() {
+ int inp1[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+ int inp2[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
  cout<< "Testing 16 to 1 Mux" << endl;
  sixteenMux(outlong, in, select, 10, 16);
   for(int i = 0; i < 10; i ++){
