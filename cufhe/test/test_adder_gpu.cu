@@ -31,11 +31,27 @@ Ctxt cufhe::ct_zero;
 Ctxt cufhe::ct_one;
 
 // Initialize a plaintext array
-void init_ptxt(Ptxt* p, int8_t x, uint8_t n) {
+void init_ptxt(Ptxt* p, uint x, uint8_t n) {
   for (int i = 0; i < n; i++) {
     p[i].message_ = x & 0x1;
     x >>= 1;
   }
+}
+
+void init_fp(Ptxt* p, float x) {
+  unsigned int* px = (unsigned int*) &x;
+  unsigned int s, e, m, f;
+
+  s = (*px >> 31) & 0x1;
+  e = ((*px >> 23) - (127 - 15)) & 0x1F;
+  m = (*px >> 13) & 0x3FF;
+
+  f = (s << 15) | (e << 10) | m;
+
+  printf("%x\t%x\t%x\n", s, e, m);
+  printf("%x\n", f);
+
+  init_ptxt(p, f, 16);
 }
 
 int8_t dump_ptxt(Ptxt* p, uint8_t n) {
@@ -52,7 +68,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 8;
+  uint8_t N = 16;
 
   SetSeed();  // set random seed
 
@@ -61,6 +77,12 @@ int main() {
   Ptxt* ptb = new Ptxt[N]; // input b
   Ptxt* ptz = new Ptxt[N]; // output
   Ptxt* pts = new Ptxt;
+
+  init_fp(pta, 0.3);
+  init_fp(ptb, 2.2);
+
+  cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
+  cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
 
   Ctxt* cta = new Ctxt[N]; // input a
   Ctxt* ctb = new Ctxt[N]; // input b
@@ -84,12 +106,9 @@ int main() {
 
   cout<< "------ Adder Test ------" <<endl;
 
-  init_ptxt(pts, 1, 1);
-  init_ptxt(pta, 8, N);
-  init_ptxt(ptb, 3, N);
-
-  cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
-  cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
+  // init_ptxt(pts, 1, 1);
+  // init_ptxt(pta, 8, N);
+  // init_ptxt(ptb, 3, N);
 
   // Encrypt
   cout<< "Encrypting..."<<endl;
@@ -117,7 +136,8 @@ int main() {
   // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
   // Mux(ctz, cta, ctb, cts, pub_key, N);
   // Sub(ctz, ctc, cta, ctb, pub_key, N);
-  Div(ctz, cta, ctb, st, N);
+  // Div(ctz, cta, ctb, st, N);
+  FpAdd(ctz, cta, ctb, st);
 
   // Ctxt* p0 = new Ctxt[8];
   // Ctxt* p1 = new Ctxt[8];
