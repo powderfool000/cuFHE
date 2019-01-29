@@ -28,7 +28,33 @@ using namespace std;
 #include <ctime>
 #include <ratio>
 
+void Fa(int& z, int& co, int& a, int& b, int& ci) {
+  int t0, t1, t2;
 
+  t0 = a ^ b;
+  t1 =  a & b;
+  t2 = ci & t0;
+  z = ci^ t0;
+  co = t1 | t2;
+
+  // cout << "FA z:"<< flush;
+  // cout<< z << flush;
+  // cout<< "  co: " << flush;
+  // cout<< co << endl;
+}
+
+void Ha(int& z, int& co, int& a, int& b) {
+  z = a ^ b;
+  co = a & b;
+}
+
+void Rca(int* z, int* co, int* a, int* b, int n) {
+  Ha(z[0], co[0], a[0], b[0]);
+
+  for (int i = 1; i < n; i++) {
+    Fa(z[i], co[i], a[i], b[i], co[i-1]);
+  }
+}
 
 void Mux(int* out, int* inp1, int* inp2, int sel, int n){
   int p0[n];
@@ -46,6 +72,21 @@ void Mux(int* out, int* inp1, int* inp2, int sel, int n){
   }
 }
 
+ void RCS(int* z, int* co, int* a, int* b, int n){
+    int tempb[n];
+  for(int i =0; i<n; i++){
+    tempb[i] = b[i] ^ 1;
+  }
+  int one[n];
+  one[0] = 1;
+  for(int i =1; i<n; i++){
+    one[i] = 0;
+
+  }
+  int finalb [n];
+  Rca(finalb,co, one, tempb ,n);
+  Rca(z,co,a,finalb,n);
+}
 
 void sixteenMux(int* out, int in[][10], int* sel, int size, int n){
   int out1[n/2][size];
@@ -74,34 +115,38 @@ for(int i=0; i< ((n/16)); i++){
 }
 }
 
-void floatAdder(int* out, int* in1, int* in2, int* bigIn){
-    int in1expo[5];
-    int in2expo[5];
+void floatAdder(int* out, int* in1, int* in2, int* test){
+    int in1exp[5];
+    int in2exp[5];
     int in1mantisaR[13];
     int in2mantisaR[13];
-    int negcheck;
+    int negcheck = 1;
+    int co[5] = {0,0,0,0,0};
 
     int tempexpo[5];
     int smallIn[16];
-    //int bigIn[16];
+    int bigIn[16];
     int smallInman[13];
     int bigInman[13];
+    int exposum[5];
 
   for(int i = 0; i < 5; i++){
-    in1exp[i] = in1[9+i];
-    in2exp[i] = in2[9+i];
+    in1exp[i] = in1[10+i];
+    in2exp[i] = in2[10+i];
   }
   for(int i = 0; i< 10; i++){             
     in1mantisaR[i+3] = in1[i];  //leae last 3 bits for the round bits
     in2mantisaR[i+3] = in2[i];
   }
-
-
-  exposum= in1exp - in2exp;
-
+  cout<< "exposum is:" << endl;
+  RCS(exposum,co, in1exp, in2exp, 5);
+  for(int i=0;i<5;i++){
+    cout<<exposum[i]<<flush;
+  }
+  cout<<""<<endl;
   //check if negative to determine which exponent is larger
-  negcheck = expsum[4] & negcheck;
-
+  negcheck = exposum[4] & negcheck;
+  cout<< negcheck << endl;
 //if "negcheck" is positive, then input2 is larger, else input1 larger. 
   Mux(tempexpo, in1exp, in2exp, negcheck, 5);       //make tempexpo into whichever exponent is higher 
   Mux(smallIn, in2, in1,  negcheck, 16);            //chosing which input is the "smaller" one , aka the one with smaller input
@@ -109,16 +154,22 @@ void floatAdder(int* out, int* in1, int* in2, int* bigIn){
   Mux(smallInman, in2mantisaR, in1mantisaR, negcheck, 13); //chose the smaller mantisa
   Mux(bigInman, in1mantisaR, in2mantisaR,  negcheck, 13);    //chose the larger mantisa
 
-
+  //testing line
+  for(int i =0; i< 13; i++){
+     test[i] = bigInman[i];
+  }
+ 
 }
 int main() {
- int inp1[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
- int inp2[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
- cout<< "Testing 16 to 1 Mux" << endl;
- sixteenMux(outlong, in, select, 10, 16);
-  for(int i = 0; i < 10; i ++){
-   cout << outlong[i] << flush;
- }
+ int inp1[16] = {0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0};
+ int inp2[16] = {1,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0};
+ int out[16];
+ int test[13];
+ // cout<< "Testing Part 1" << endl;
+ // floatAdder(out, inp1, inp2, test);
+ // cout<<"big mantisa is:" <<endl;
+ //  for(int i = 0; i < 13; i ++){
+ //   cout << test[i] << flush;
+ // }
  return 0;
 }
