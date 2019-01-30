@@ -49,11 +49,13 @@ void Ha(int& z, int& co, int& a, int& b) {
 }
 
 void Rca(int* z, int* co, int* a, int* b, int n) {
-  Ha(z[0], co[0], a[0], b[0]);
+  int tempCo [n];
+  Ha(z[0], tempCo[0], a[0], b[0]);
 
   for (int i = 1; i < n; i++) {
-    Fa(z[i], co[i], a[i], b[i], co[i-1]);
+    Fa(z[i], tempCo[i], a[i], b[i], tempCo[i-1]);
   }
+  *co = tempCo[n-1];
 }
 
  void RCS(int* z, int* co, int* a, int* b, int n){
