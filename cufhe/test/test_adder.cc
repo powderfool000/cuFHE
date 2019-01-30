@@ -156,7 +156,7 @@ void totalShift(int* o, int* smallI, int* sel){
 }
 /**********************************************************************************/
 /**********************************************************************************/
-void floatAdder(int* out, int* in1, int* in2, int* test){
+void floatAdder(int* out, int* in1, int* in2){
 	//Part 1 Temps
     int in1exp[5];
     int in2exp[5];
@@ -188,7 +188,7 @@ void floatAdder(int* out, int* in1, int* in2, int* test){
     	in2mantisaR[i+3] = in2[i];
   	}
 
-  	cout<< "Exposum:" << endl;
+  	cout<< "Exposum: " << endl;
   	RCS(exposum,co, in1exp, in2exp, 5);
   	for(int i = 4; i >= 0;i--){
     	cout << exposum[i] << flush;
@@ -197,7 +197,7 @@ void floatAdder(int* out, int* in1, int* in2, int* test){
   	cout << endl;
 
   	//check if negative to determine which exponent is larger
-  	cout << "Negcheck:" << endl;
+  	cout << "Negcheck: " << endl;
   	negcheck = exposum[4] & negcheck;
   	cout << negcheck << endl;
   	cout << endl;
@@ -216,6 +216,7 @@ void floatAdder(int* out, int* in1, int* in2, int* test){
   	//PART 2
   	totalShift(shiftedMantissa, smallInman, sel);
 
+  	//Shift Test
   	for (int i = 0; i < 13; i++){
   		out[i] = shiftedMantissa[i];
   	}
@@ -232,11 +233,11 @@ int main() {
  int test[13];
  int output[13];
 
- cout<< "Testing Part 1" << endl;
+ cout<< "Testing Part 1: " << endl;
  floatAdder(out, inp1, inp2, test);
  cout << endl;
 
- cout << "Testing Part 2" << endl;
+ cout << "Testing Part 2: " << endl;
  for(int i = 12; i >= 0; i--) {
  	cout << out[i] << flush;
  }
