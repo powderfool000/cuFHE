@@ -135,10 +135,10 @@ void totalShift(int* out, int* smallI, int* sel) {
 		}
 		else {
 			Shift(smallO[i], smallI, 0 ,13, i);
-			//smallO[i][2] = smallI[i-1];
-			//smallO[i][1] = smallI[i-2];
-			//smallO[i][0] = smallI[i-3];
-			//smallO[i][0] = smallO[i][0] + smallO[i-1][0];
+			smallO[i][2] = smallI[i-1];
+			smallO[i][1] = smallI[i-2];
+			smallO[i][0] = smallI[i-3];
+			smallO[i][0] = smallO[i][0] + smallO[i-1][0];
 		}
 	}
 
@@ -158,14 +158,17 @@ void roundNormalize(int* finalSum, int* tempexpoCo, int* mantisaCosum, int* co, 
 
   Rca(tempexpoCo, co, tempexpo, expoOne, 5);  // expoOne is just a 5 bit number 00001 to add to tempexpo
   Mux(tempexpo, tempexpoCo, tempexpo, *co, 5); //chose to use the added exponent or not
-  Mux(mantisaSum, mantisaCosum, mantisaSum, *co, 13); //chosing the correct mantisa
+  Mux(mantisaSum, mantisaSum, mantisaCosum, *co, 13); //chosing the correct mantisa
 
-  for(int i=0; i<19; i++){
-    if(i<13){
-      finalSum[i] = mantisaSum[i];
+  for(int i = 0; i < 19; i++){
+    if(i < 13){
+    	finalSum[i] = mantisaSum[i];
     }
-    else{
-      finalSum[i] = tempexpo[i+13];
+    else if (i > 12 & i < 18){
+    	finalSum[i] = tempexpo[i-13];
+    }
+    else {
+    	finalSum[i] = 0;
     }
   }
 }
@@ -214,6 +217,11 @@ void floatAdder(int* out, int* in1, int* in2){
     	in2mantisaR[i+3] = in2[i];
   	}
 
+  	for (int i = 0; i < 3; i++) {
+  		in1mantisaR[i] = 0;
+  		in2mantisaR[i] = 0;
+  	}
+
   	RCS(exposum,co, in1exp, in2exp, 5);
 
   	//check if negative to determine which exponent is larger
@@ -230,10 +238,6 @@ void floatAdder(int* out, int* in1, int* in2){
   		sel[i] = exposum[i];
   	}
 
-  	for (int i = 0; i < 3; i++){
-  		smallInman[i] = 0;
-  	}
-
   	//PART 2
   	totalShift(shiftedMantissa, smallInman, sel);
 
@@ -248,11 +252,11 @@ void floatAdder(int* out, int* in1, int* in2){
   	//PART 4
   	roundNormalize(finalSum, expoCo, mantissaCosum, &manCo, mantisaSum, one, tempexpo, 0);
 
-  	//cout << "FinalSum" << endl;
-  	//for (int i = 19; i >= 0; i--){
-  	//	cout << finalSum[i] << flush;
-  	//}
-  	//cout << endl;
+  	cout << "FinalSum" << endl;
+  	for (int i = 18; i >= 0; i--){
+  		cout << finalSum[i] << flush;
+  	}
+  	cout << endl;
 
 }
 /**********************************************************************************/
