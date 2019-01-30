@@ -47,11 +47,13 @@ void Ha(int& z, int& co, int& a, int& b) {
 /**********************************************************************************/
 /**********************************************************************************/
 void Rca(int* z, int* co, int* a, int* b, int n) {
-  Ha(z[0], co[0], a[0], b[0]);
+  int tempCo [n];
+  Ha(z[0], tempCo[0], a[0], b[0]);
 
   for (int i = 1; i < n; i++) {
-    Fa(z[i], co[i], a[i], b[i], co[i-1]);
+    Fa(z[i], tempCo[i], a[i], b[i], tempCo[i-1]);
   }
+  *co = tempCo[n-1];
 }
 /**********************************************************************************/
 /**********************************************************************************/
@@ -115,15 +117,16 @@ void sixteenMux(int* out, int in[][13], int* sel, int size, int n){
 void Shift(int* smallout, int* smallin, int smallzero, int n, int nshift) {
 	int temp = (n - 1) - nshift;
 	for(int i = 0; i <= temp; i++) {
-		smallout[i] = smallin[nshift + i];
+		smallout[i] = smallin[(nshift + i)];
 	}
+
 	for(int i = (temp + 1); i < 13; i++) {
 		smallout[i] = smallzero;
 	}
 }
 /**********************************************************************************/
 /**********************************************************************************/
-void totalShift(int* o, int* smallI, int* sel){
+void totalShift(int* out, int* smallI, int* sel) {
 	int smallO[16][13];
 
 	for(int i = 0; i <= 12; i++) {
@@ -145,7 +148,7 @@ void totalShift(int* o, int* smallI, int* sel){
 		}
 	}
 
-	sixteenMux(o, smallO, sel, 13, 16);
+	sixteenMux(out, smallO, sel, 13, 16);
 
 }
 /**********************************************************************************/
@@ -227,13 +230,12 @@ void floatAdder(int* out, int* in1, int* in2){
   		sel[i] = exposum[i];
   	}
 
+  	for (int i = 0; i < 3; i++){
+  		smallInman[i] = 0;
+  	}
+
   	//PART 2
   	totalShift(shiftedMantissa, smallInman, sel);
-
-  	//Shift Test
-  	for (int i = 0; i < 13; i++){
-  		out[i] = shiftedMantissa[i];
-  	}
 
   	// part 3 
 	Rca(mantisaSum, &manCo, shiftedMantissa, bigInman, 13);
@@ -244,10 +246,10 @@ void floatAdder(int* out, int* in1, int* in2){
 	cout << endl;
 
   	//PART 4
-  	//roundNormalize(finalSum, expoCo, mantissaCosum, &manCo, mantisaSum, one, tempexpo, 0);
+  	roundNormalize(finalSum, expoCo, mantissaCosum, &manCo, mantisaSum, one, tempexpo, 0);
 
   	//cout << "FinalSum" << endl;
-  	//for (int i = 13; i >= 0; i--){
+  	//for (int i = 19; i >= 0; i--){
   	//	cout << finalSum[i] << flush;
   	//}
   	//cout << endl;
@@ -262,6 +264,15 @@ int main() {
  int out[13];
  int test[13];
  int output[13];
+
+ int tester[13] = {0,0,0,1,0,0,0,0,0,0,0,0,0};
+ int o[13];
+
+ Shift(o, tester, 0, 13, 2);
+ for (int i = 12; i >= 0; i--){
+ 	cout << o[i] << flush;
+ }
+ cout << endl;
 
 
  floatAdder(out, inp1, inp2);
