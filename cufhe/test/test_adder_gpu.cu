@@ -82,7 +82,7 @@ int main() {
   for (int i = 0; i < N; i ++)
     st[i].Create();
 
-  cout<< "------ Adder Test ------" <<endl;
+  cout<< "------ ALU Test ------" <<endl;
 
   init_ptxt(pts, 1, 1);
   init_ptxt(pta, 8, N);
@@ -90,6 +90,7 @@ int main() {
 
   cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
   cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
+  cout<<"s: "<<int(dump_ptxt(pts, 1))<<endl;
 
   // Encrypt
   cout<< "Encrypting..."<<endl;
@@ -111,28 +112,7 @@ int main() {
   // Calculate
   cout<< "Calculating..."<<endl;
 
-  // add_n(ctz, ctc, cta, ctb, pub_key, N);
-
-  // Add(ctz, ctc, cta, ctb, pub_key, N);
-  // Add(ctz, ctc, cta, ctb, cts, pub_key, N);
-  // Mux(ctz, cta, ctb, cts, pub_key, N);
-  // Sub(ctz, ctc, cta, ctb, pub_key, N);
-  Div(ctz, cta, ctb, st, N);
-
-  // Ctxt* p0 = new Ctxt[8];
-  // Ctxt* p1 = new Ctxt[8];
-  // Ctxt* is = new Ctxt;
-
-  // Not(*is, *cts);
-
-  // for (uint8_t i = 0; i < N; i++) {
-  //   And(p0[i], cta[i], *is, pub_key);
-  //   And(p1[i], ctb[i], *cts, pub_key);
-  // }
-
-  // for (uint8_t i = 0; i < N; i++) {
-  //   Or(ctz[i], p0[i], p1[i], pub_key);
-  // }
+  Add(ctz, ctc, cta, ctb, st, N);
 
   // Decrypt
   cout<< "Decrypting"<<endl;
@@ -141,6 +121,48 @@ int main() {
   }
 
   cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
+
+  Decrypt(pta[0], ctc[N-1], pri_key);
+
+  cout<<"carry out: "<<pta[0].message_<<endl;
+  
+  Mux(ctz, cta, ctb, cts, st, N);
+  
+  // Decrypt
+  cout<< "Decrypting"<<endl;
+  for (int i = N-1; i >= 0; i--) {
+    Decrypt(ptz[i], ctz[i], pri_key);
+  }
+
+  cout<<"s ? B : A) = "<<int(dump_ptxt(ptz, N))<<endl;
+
+  Decrypt(pta[0], ctc[N-1], pri_key);
+
+  cout<<"carry out: "<<pta[0].message_<<endl;
+  
+  Sub(ctz, ctc, cta, ctb, st, N);
+  
+  // Decrypt
+  cout<< "Decrypting"<<endl;
+  for (int i = N-1; i >= 0; i--) {
+    Decrypt(ptz[i], ctz[i], pri_key);
+  }
+
+  cout<<"A - B = "<<int(dump_ptxt(ptz, N))<<endl;
+
+  Decrypt(pta[0], ctc[N-1], pri_key);
+
+  cout<<"carry out: "<<pta[0].message_<<endl;
+  
+  Div(ctz, cta, ctb, st, N);
+
+  // Decrypt
+  cout<< "Decrypting"<<endl;
+  for (int i = N-1; i >= 0; i--) {
+    Decrypt(ptz[i], ctz[i], pri_key);
+  }
+
+  cout<<"A / B = "<<int(dump_ptxt(ptz, N))<<endl;
 
   Decrypt(pta[0], ctc[N-1], pri_key);
 
