@@ -126,12 +126,6 @@ void Shift(int* smallout, int* smallin, int smallzero, int n, int nshift) {
 void totalShift(int* o, int* smallI, int* sel){
 	int smallO[16][13];
 
-	cout << "Num to Shift" << endl;
-	for(int i = 12; i >= 0; i--){
-		cout << smallI[i] << flush;
-	}
-	cout << endl;
-
 	for(int i = 0; i <= 12; i++) {
 		if(i < 3){
 			Shift(smallO[i], smallI, 0, 13, i);
@@ -156,6 +150,24 @@ void totalShift(int* o, int* smallI, int* sel){
 }
 /**********************************************************************************/
 /**********************************************************************************/
+void roundNormalize(int* finalSum, int* tempexpoCo, int* mantisaCosum, int* co, int* mantisaSum, int* expoOne, int* tempexpo, int smallZero){
+  Shift(mantisaCosum, mantisaSum, smallZero, 13, 1);   // if carry out, shift mantisa right by 1    ***note, may be interpretting "product" wrong in the algorithm description***
+
+  Rca(tempexpoCo, co, tempexpo, expoOne, 5);  // expoOne is just a 5 bit number 00001 to add to tempexpo
+  Mux(tempexpo, tempexpoCo, tempexpo, *co, 5); //chose to use the added exponent or not
+  Mux(mantisaSum, mantisaCosum, mantisaSum, *co, 13); //chosing the correct mantisa
+
+  for(int i=0; i<19; i++){
+    if(i<13){
+      finalSum[i] = mantisaSum[i];
+    }
+    else{
+      finalSum[i] = tempexpo[i+13];
+    }
+  }
+}
+/**********************************************************************************/
+/**********************************************************************************/
 void floatAdder(int* out, int* in1, int* in2){
 	//Part 1 Temps
     int in1exp[5];
@@ -176,6 +188,17 @@ void floatAdder(int* out, int* in1, int* in2){
     int shiftedMantissa[13];
     int sel[4];
 
+    //Part 3 Temps
+    int mantisaSum[13];
+    int manCo;
+
+    //Part 4 Temps
+    int finalSum[19];
+    int expoCo[5];
+    int mantissaCosum[13];
+    int one[5] = {1,0,0,0,0};
+    int smallZero = 0;
+
 
     //PART 1
     for(int i = 0; i < 5; i++){
@@ -188,19 +211,10 @@ void floatAdder(int* out, int* in1, int* in2){
     	in2mantisaR[i+3] = in2[i];
   	}
 
-  	cout<< "Exposum: " << endl;
   	RCS(exposum,co, in1exp, in2exp, 5);
-  	for(int i = 4; i >= 0;i--){
-    	cout << exposum[i] << flush;
-  	}
-  	cout << endl;
-  	cout << endl;
 
   	//check if negative to determine which exponent is larger
-  	cout << "Negcheck: " << endl;
   	negcheck = exposum[4] & negcheck;
-  	cout << negcheck << endl;
-  	cout << endl;
 
   	//if "negcheck" is positive, then input2 is larger, else input1 larger. 
   	Mux(tempexpo, in1exp, in2exp, negcheck, 5);       //make tempexpo into whichever exponent is higher 
@@ -221,7 +235,23 @@ void floatAdder(int* out, int* in1, int* in2){
   		out[i] = shiftedMantissa[i];
   	}
 
-  	//PART 3
+  	// part 3 
+	Rca(mantisaSum, &manCo, shiftedMantissa, bigInman, 13);
+
+	for(int i = 12; i >= 0; i--){
+		cout << mantisaSum[i] << flush;
+	}
+	cout << endl;
+
+  	//PART 4
+  	//roundNormalize(finalSum, expoCo, mantissaCosum, &manCo, mantisaSum, one, tempexpo, 0);
+
+  	//cout << "FinalSum" << endl;
+  	//for (int i = 13; i >= 0; i--){
+  	//	cout << finalSum[i] << flush;
+  	//}
+  	//cout << endl;
+
 }
 /**********************************************************************************/
 
@@ -233,15 +263,8 @@ int main() {
  int test[13];
  int output[13];
 
- cout<< "Testing Part 1: " << endl;
- floatAdder(out, inp1, inp2, test);
- cout << endl;
 
- cout << "Testing Part 2: " << endl;
- for(int i = 12; i >= 0; i--) {
- 	cout << out[i] << flush;
- }
- cout << endl;
+ floatAdder(out, inp1, inp2);
 
  return 0;
 }
