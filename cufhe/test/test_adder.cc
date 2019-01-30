@@ -110,7 +110,7 @@ for(int i=0; i< ((n/16)); i++){
 }
 
 void roundNormalize(int* finalSum, int* tempexpoCo, int* mantisaCosum, int* co, int* mantisaSum, int* expoOne, int* tempexpo, int* smallZero){
-  Shift(mantisaCosum, mantisaSum, smallZero, 10, 1, st);   // if carry out, shift mantisa right by 1    ***note, may be interpretting "product" wrong in the algorithm description***
+  Shift(mantisaCosum, mantisaSum, smallZero, 1, 13);   // if carry out, shift mantisa right by 1    ***note, may be interpretting "product" wrong in the algorithm description***
   Rca(tempexpoCo, co, tempexpo, expoOne, 5);  // expoOne is just a 5 bit number 00001 to add to tempexpo
   Mux(tempexpo, tempexpoCo, tempexpo, co, 5); //chose to use the added exponent or not
   Mux(mantisaSum, mantisaCosum, mantisaSum, co, 13); //chosing the correct mantisa
@@ -145,7 +145,8 @@ void floatAdder(int* out, int* in1, int* in2, int* test){
     //part 3
     int smallZero = 0;
     int mantisaSum[13]; //sum of the two mantisas
-    int* manCo; //carryout
+    int* manCo; //expoOne
+    int expoOne = {1,0,0,0,0};
 
 
 
@@ -184,7 +185,7 @@ void floatAdder(int* out, int* in1, int* in2, int* test){
   // part 3 
   Rca(mantisaSum, manCo, smallInman, bigInman, 13);
 
-  roundNormalize(finalSum, tempexpoCo, mantisaCosum, co, mantisaSum, expoOne, tempexpo, smallZero)
+  roundNormalize(finalSum, tempexpoCo, mantisaCosum, manCo, mantisaSum, expoOne, tempexpo, smallZero)
     //testing line
   for(int i =0; i< 13; i++){
      test[i] = mantisaSum[i];
