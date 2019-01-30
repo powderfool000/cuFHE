@@ -157,6 +157,7 @@ void totalShift(int* o, int* smallI, int* sel){
 /**********************************************************************************/
 /**********************************************************************************/
 void floatAdder(int* out, int* in1, int* in2, int* test){
+	//Part 1 Temps
     int in1exp[5];
     int in2exp[5];
     int in1mantisaR[13];
@@ -170,8 +171,13 @@ void floatAdder(int* out, int* in1, int* in2, int* test){
     int smallInman[13];
     int bigInman[13];
     int exposum[5];
+
+    //PART 2 Temps
+    int shiftedMantissa[13];
     int sel[4];
 
+
+    //PART 1
     for(int i = 0; i < 5; i++){
     	in1exp[i] = in1[10+i];
     	in2exp[i] = in2[10+i];
@@ -203,18 +209,18 @@ void floatAdder(int* out, int* in1, int* in2, int* test){
   	Mux(smallInman, in2mantisaR, in1mantisaR, negcheck, 13); //chose the smaller mantisa
   	Mux(bigInman, in1mantisaR, in2mantisaR,  negcheck, 13);    //chose the larger mantisa
 
-  	//testing line
-  	/*
-  	for(int i = 0; i < 13; i++){
-  	   test[i] = smallInman[i];
-  	}
-  	*/
-
   	for (int i = 3; i >= 0; i--) {
   		sel[i] = exposum[i];
   	}
 
-  	totalShift(out, smallInman, sel);
+  	//PART 2
+  	totalShift(shiftedMantissa, smallInman, sel);
+
+  	for (int i = 0; i < 13; i++){
+  		out[i] = shiftedMantissa[i];
+  	}
+
+  	//PART 3
 }
 /**********************************************************************************/
 
