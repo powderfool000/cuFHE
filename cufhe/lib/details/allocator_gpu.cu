@@ -60,7 +60,7 @@ MemoryDeleter AllocatorGPU::GetDeleter() { return Delete; }
 
 std::pair<void*, MemoryDeleter> EventAllocator::New() {
 	cudaEvent_t* ev = new cudaEvent_t;
-	CuSafeCall(cudaEventCreate(ev));
+	CuSafeCall(cudaEventCreateWithFlags(ev, cudaEventDisableTiming));
 	return {(void*)ev, Delete};
 }
 
