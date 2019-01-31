@@ -37,6 +37,7 @@ void CleanUp() {
 }
 
 inline void CtxtCopyH2D(const Ctxt& c, Stream st) {
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)c.lock_), 0);
   cudaMemcpyAsync(c.lwe_sample_device_->data(),
                   c.lwe_sample_->data(),
                   c.lwe_sample_->SizeData(),
@@ -50,6 +51,7 @@ inline void CtxtCopyD2H(const Ctxt& c, Stream st) {
                   c.lwe_sample_->SizeData(),
                   cudaMemcpyDeviceToHost,
                   st.st());
+  cudaEventRecord(*((cudaEvent_t*)c.lock_), st.st());
 }
 
 void Nand(Ctxt& out,
@@ -162,25 +164,25 @@ void Fa(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, const Ctxt& ci, Stream&
 void Rca(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream& st, uint8_t n) {
   Ha(z[0], c[0], a[0], b[0], st);
 
-  Synchronize();
+  // Synchronize();
 
   for (uint8_t i = 1; i < n; i++) {
     Fa(z[i], c[i], a[i], b[i], c[i-1], st);
   }
 
-  Synchronize();
+  // Synchronize();
 }
 
 void Rca(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream& st, uint8_t n) {
   Fa(z[0], co[0], a[0], b[0], *ci, st);
 
-  Synchronize();
+  // Synchronize();
 
   for (uint8_t i = 1; i < n; i++) {
     Fa(z[i], co[i], a[i], b[i], co[i-1], st);
   }
 
-  Synchronize();
+  // Synchronize();
 }
 
 void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n) {
@@ -188,11 +190,11 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n) {
   Ctxt p1[n];
   Ctxt is;
 
-  Synchronize();
+  // Synchronize();
 
   Not(is, *s, st[0]);
 
-  Synchronize();
+  // Synchronize();
 
   for (uint8_t i = 0; i < n; i++) {
     And(p0[i], in0[i], is, st[i]);
@@ -203,45 +205,45 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n) {
     Or(z[i], p0[i], p1[i], st[i]);
   }
 
-  Synchronize();
+  // Synchronize();
 }
 
 void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
   Ctxt t0[(n+1)/2], t1[(n+1)/2];
   Ctxt c0[(n+1)/2], c1[(n+1)/2];
 
-  Synchronize();
+  // Synchronize();
 
   Rca(z, c, a, b, st[0], n/2);
 
   Rca(t0, c0, a+n/2, b+n/2, st[1], (n+1)/2);
   Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
 
-  Synchronize();
+  // Synchronize();
 
   Mux(z+n/2, t0, t1, c+n/2-1, st, (n+1)/2);
   Mux(c+n/2, c0, c1, c+n/2-1, st, (n+1)/2);
 
-  Synchronize();
+  // Synchronize();
 }
 
 void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n) {
   Ctxt t0[(n+1)/2], t1[(n+1)/2];
   Ctxt c0[(n+1)/2], c1[(n+1)/2];
 
-  Synchronize();
+  // Synchronize();
 
   Rca(z, co, a, b, ci, st[0], n/2);
 
   Rca(t0, c0, a+n/2, b+n/2, st[1], (n+1)/2);
   Rca(t1, c1, a+n/2, b+n/2, &ct_one, st[2], (n+1)/2);
 
-  Synchronize();
+  // Synchronize();
 
   Mux(z+n/2, t0, t1, co+n/2-1, st, (n+1)/2);
   Mux(co+n/2, c0, c1, co+n/2-1, st, (n+1)/2);
 
-  Synchronize();
+  // Synchronize();
 }
 
 void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
@@ -255,17 +257,17 @@ void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, Stream* st, uint8_t n) {
 void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
   Ctxt t[n];
 
-  Synchronize();
+  // Synchronize();
 
   for (uint8_t i = 0; i < n; i++) {
     Not(t[i], b[i], st[i]);
   }
 
-  Synchronize();
+  // Synchronize();
 
   Add(z, c, a, t, &ct_one, st, n);
 
-  Synchronize();
+  // Synchronize();
 }
 
 void Mul(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
@@ -279,7 +281,7 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
   Ctxt c[n];    // carry
   Ctxt bi[n];   // bi = -b
 
-  Synchronize();
+  // Synchronize();
 
   // initialize
   for (int i = 0; i < n; i++) {
@@ -288,42 +290,42 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
     Copy(r[i], a[i], st[i]);
   }
 
-  Synchronize();
+  // Synchronize();
 
   Add(bi, c, bi, s, &ct_one, st, n);
 
-  Synchronize();
+  // Synchronize();
 
   // first iteration is always subtract (add bi)
   s--;
   Add(t0, c, s, bi, st, n);
 
-  Synchronize();
+  // Synchronize();
 
   for (int i = 0; i < n; i++) {
     Copy(s[i], t0[i], st[i]);
   }
 
-  Synchronize();
+  // Synchronize();
 
   Not(z[s-r], s[n-1], st[0]);
 
-  Synchronize();
+  // Synchronize();
 
   while (s > r) {
     s--;
     Add(t0, c, s, bi, st, n);
     Add(t1, c, s, b, st, n);
 
-    Synchronize();
+    // Synchronize();
 
     Mux(s, t0, t1, s+n, st, n);
 
-    Synchronize();
+    // Synchronize();
 
     Not(z[s-r], s[n-1]);
 
-    Synchronize();
+    // Synchronize();
   }
 }
 

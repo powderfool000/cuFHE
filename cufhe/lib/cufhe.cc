@@ -296,6 +296,14 @@ Ctxt::~Ctxt() {
     delete lwe_sample_device_;
     lwe_sample_device_ = nullptr;
   }
+
+  if(lock_ != nullptr)
+  {
+    lock_deleter_(lock_);
+    lock_deleter_ = nullptr;
+    delete lock_;
+    lock_ = nullptr;
+  }
 }
 
 void SetSeed(uint32_t seed) {

@@ -47,4 +47,11 @@ public:
   MemoryDeleter GetDeleter();
 };
 
+class EventAllocator: public Allocator {
+public:
+  static std::pair<void*, MemoryDeleter> New();
+  static void Delete(void* ev);
+  MemoryDeleter GetDeleter();
+};
+
 } // namespace cufhe

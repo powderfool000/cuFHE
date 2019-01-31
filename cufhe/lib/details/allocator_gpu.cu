@@ -57,4 +57,15 @@ void AllocatorGPU::Delete(void* ptr) { CuSafeCall(cudaFree(ptr)); }
 
 MemoryDeleter AllocatorGPU::GetDeleter() { return Delete; }
 
+
+std::pair<void*, MemoryDeleter> EventAllocator::New() {
+	cudaEvent_t* ev = new cudaEvent_t;
+	CuSafeCall(cudaEventCreate(ev));
+	return {(void*)ev, Delete};
+}
+
+void EventAllocator::Delete(void* ev) { CuSafeCall(cudaEventDestroy(*((cudaEvent_t*)ev))); }
+
+MemoryDeleter EventAllocator::GetDeleter() { return Delete; }
+
 } // namespace cufhe

@@ -41,6 +41,11 @@ Ctxt::Ctxt(bool is_alias) {
   pair = AllocatorGPU::New(lwe_sample_device_->SizeMalloc());
   lwe_sample_device_->set_data((LWESample::PointerType)pair.first);
   lwe_sample_device_deleter_ = pair.second;
+
+  pair = EventAllocator::New();
+  lock_ = pair.first;
+  lock_deleter_ = pair.second;
+
 }
 
 } // namespace cufhe
