@@ -68,6 +68,11 @@ int main() {
   Ctxt* ctc = new Ctxt[N]; // carry
   Ctxt* cts = new Ctxt;
 
+  float et;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+
   cout<< "------ Key Generation ------" <<endl;
   PriKey pri_key;
   PubKey pub_key;
@@ -112,7 +117,12 @@ int main() {
   // Calculate
   cout<< "Calculating..."<<endl;
 
+  cudaEventRecord(start, 0);
+
   Add(ctz, ctc, cta, ctb, st, N);
+
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
 
   // Decrypt
   cout<< "Decrypting"<<endl;
@@ -122,12 +132,20 @@ int main() {
 
   cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
 
+  cudaEventElapsedTime(&et, start, stop);
+  cout<<"Elapsed: "<<et<<" ms"<<endl;
+
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
   
+  cudaEventRecord(start, 0);
+
   Mux(ctz, cta, ctb, cts, st, N);
   
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+
   // Decrypt
   cout<< "Decrypting"<<endl;
   for (int i = N-1; i >= 0; i--) {
@@ -136,12 +154,20 @@ int main() {
 
   cout<<"s ? B : A) = "<<int(dump_ptxt(ptz, N))<<endl;
 
+  cudaEventElapsedTime(&et, start, stop);
+  cout<<"Elapsed: "<<et<<" ms"<<endl;
+
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
   
+  cudaEventRecord(start, 0);
+
   Sub(ctz, ctc, cta, ctb, st, N);
   
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+
   // Decrypt
   cout<< "Decrypting"<<endl;
   for (int i = N-1; i >= 0; i--) {
@@ -150,11 +176,19 @@ int main() {
 
   cout<<"A - B = "<<int(dump_ptxt(ptz, N))<<endl;
 
+  cudaEventElapsedTime(&et, start, stop);
+  cout<<"Elapsed: "<<et<<" ms"<<endl;
+
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
   
+  cudaEventRecord(start, 0);
+
   Div(ctz, cta, ctb, st, N);
+
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
 
   // Decrypt
   cout<< "Decrypting"<<endl;
@@ -163,6 +197,9 @@ int main() {
   }
 
   cout<<"A / B = "<<int(dump_ptxt(ptz, N))<<endl;
+
+  cudaEventElapsedTime(&et, start, stop);
+  cout<<"Elapsed: "<<et<<" ms"<<endl;
 
   Decrypt(pta[0], ctc[N-1], pri_key);
 
