@@ -52,7 +52,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 8;
+  uint8_t N = 16;
   uint8_t ns = N;
 
   SetSeed();  // set random seed
