@@ -91,8 +91,8 @@ int main() {
   cout<< "------ ALU Test ------" <<endl;
 
   init_ptxt(pts, 1, 1);
-  init_ptxt(pta, 8, N);
-  init_ptxt(ptb, 3, N);
+  init_ptxt(pta, 1111, N);
+  init_ptxt(ptb, 1111, N);
 
   cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
   cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
