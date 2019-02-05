@@ -122,7 +122,7 @@ int main() {
 ///////////////////////////////////////
   cudaEventRecord(start, 0);
 
-  Add(ctz, ctc, cta, ctb, st, N);
+  Rca(ctz, ctc, cta, ctb, *st, N);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
