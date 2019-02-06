@@ -52,7 +52,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 16;
+  uint8_t N = 32;
 
   SetSeed();  // set random seed
 
@@ -90,8 +90,8 @@ int main() {
   cout<< "------ ALU Test ------" <<endl;
 
   init_ptxt(pts, 1, 1);
-  init_ptxt(pta, 30, N);
-  init_ptxt(ptb, 15, N);
+  init_ptxt(pta, 100, N);
+  init_ptxt(ptb, 100, N);
 
   cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
   cout<<"B: "<<int(dump_ptxt(ptb, N))<<endl;
