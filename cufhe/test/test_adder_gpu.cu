@@ -90,7 +90,7 @@ int main() {
   cout<< "------ ALU Test ------" <<endl;
 
   init_ptxt(pts, 1, 1);
-  init_ptxt(pta, 1500, N);
+  init_ptxt(pta, 150, N);
   init_ptxt(ptb, 15, N);
 
   cout<<"A: "<<int(dump_ptxt(pta, N))<<endl;
