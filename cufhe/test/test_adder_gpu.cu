@@ -141,7 +141,7 @@ int main() {
   
   cudaEventRecord(start, 0);
 
-  Div(ctz, cta, ctb, cts, st, N);
+  Div(ctz, cta, ctb, st, N);
   
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
