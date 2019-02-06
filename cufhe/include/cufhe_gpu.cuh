@@ -81,6 +81,7 @@ void Add (Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n);
 void Add (Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Stream* st, uint8_t n);
 void Mux (Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Stream* st, uint8_t n);
 void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n);
+void Mul(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n);
 void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n);
 // Not Ready...
 // void Mux(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const Ctxt& in2,

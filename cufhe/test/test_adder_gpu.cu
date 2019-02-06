@@ -52,7 +52,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 8;
+  uint8_t N = 4;
 
   SetSeed();  // set random seed
 
@@ -119,7 +119,7 @@ int main() {
 
   cudaEventRecord(start, 0);
 
-  Add(ctz, ctc, cta, ctb, st, N);
+  Mul(ctz, ctc, cta, ctb, st, N);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
@@ -141,7 +141,7 @@ int main() {
   
   cudaEventRecord(start, 0);
 
-  Mux(ctz, cta, ctb, cts, st, N);
+  Div(ctz, cta, ctb, cts, st, N);
   
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
