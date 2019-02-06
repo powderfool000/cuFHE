@@ -119,7 +119,7 @@ int main() {
 
   cudaEventRecord(start, 0);
 
-  Mul(ctz, ctc, cta, ctb, st, N);
+  Mul(ctz, cta, ctb, st, N);
 
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
@@ -130,7 +130,7 @@ int main() {
     Decrypt(ptz[i], ctz[i], pri_key);
   }
 
-  cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
+  cout<<"A * B = "<<int(dump_ptxt(ptz, N))<<endl;
 
   cudaEventElapsedTime(&et, start, stop);
   cout<<"Elapsed: "<<et<<" ms"<<endl;
@@ -152,7 +152,7 @@ int main() {
     Decrypt(ptz[i], ctz[i], pri_key);
   }
 
-  cout<<"s ? B : A) = "<<int(dump_ptxt(ptz, N))<<endl;
+  cout<<"A / B = "<<int(dump_ptxt(ptz, N))<<endl;
 
   cudaEventElapsedTime(&et, start, stop);
   cout<<"Elapsed: "<<et<<" ms"<<endl;
