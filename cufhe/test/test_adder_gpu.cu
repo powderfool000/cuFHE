@@ -161,6 +161,7 @@ int main() {
 
   cout<<"carry out: "<<pta[0].message_<<endl;
   
+  /*
   cudaEventRecord(start, 0);
 
   Sub(ctz, ctc, cta, ctb, st, N);
@@ -204,6 +205,7 @@ int main() {
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
+  */
   
   delete [] pta;
   delete [] ptb;
