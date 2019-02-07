@@ -27,7 +27,7 @@ using namespace cufhe;
 #include <iostream>
 using namespace std;
 
-#include <cuda_profiler_api.h >
+//#include <cuda_profiler_api.h >
 
 Ctxt cufhe::ct_zero;
 Ctxt cufhe::ct_one;
