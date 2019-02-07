@@ -54,7 +54,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 32;
+  uint8_t N = 1;
   uint8_t ns = N;
 
   SetSeed();  // set random seed
@@ -153,9 +153,8 @@ int main() {
   /////////////////////////////////////
   ///////// FA /////////////////////
 /////////////////////////////////////
-
-for(int i = 0; i <3; i++){
   cudaEventRecord(start, 0);
+for(int i = 0; i <3; i++){
   
   Fa(ctz[0], ctc[0], cta[0], ctb[0], ct_zero, *st);
 
