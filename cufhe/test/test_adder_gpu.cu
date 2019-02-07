@@ -27,6 +27,8 @@ using namespace cufhe;
 #include <iostream>
 using namespace std;
 
+#include <cuda_profiler_api.h >
+
 Ctxt cufhe::ct_zero;
 Ctxt cufhe::ct_one;
 
@@ -118,6 +120,10 @@ int main() {
 
   // Calculate
   cout<< "Calculating..."<<endl;
+
+  //Visual profiler
+  //cudaProfilerStart();
+
 ///////////////////////////////////////
   /////////// ADD /////////////////////
 ///////////////////////////////////////
@@ -144,42 +150,22 @@ int main() {
 
   // cout<<"carry out: "<<pta[0].message_<<endl;
 
-//   /////////////////////////////////////
-//   ///////// FA /////////////////////
-// /////////////////////////////////////
-//   cudaEventRecord(start, 0);
+  /////////////////////////////////////
+  ///////// FA /////////////////////
+/////////////////////////////////////
 
-//   Fa(ctz[0], ctc[0], cta[0], ctb[0], ct_zero, *st);
-
-//   cudaEventRecord(stop, 0);
-//   cudaEventSynchronize(stop);
-
-//   // Decrypt
-//   cout<< "Decrypting"<<endl;
-//   for (int i = N-1; i >= 0; i--) {
-//     Decrypt(ptz[i], ctz[i], pri_key);
-//   }
-
-//   cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
-//   cout<<"Bits: "<< N << " Streams: " << ns <<endl;
-
-//   cudaEventElapsedTime(&et, start, stop);
-//   cout<<"Elapsed: "<<et<<" ms"<<endl;
-
-//   Decrypt(pta[0], ctc[N-1], pri_key);
-
-//   cout<<"carry out: "<<pta[0].message_<<endl;
-
-  
-  /////////////////////////////////////////////
-  /////////////  MUX /////////////////////////
-  //////////////////////////////////////////////
+for(int i = 0; i <3; i++){
   cudaEventRecord(start, 0);
-
-  Mux(ctz, cta, ctb, cts, st, N);
   
+  Fa(ctz[0], ctc[0], cta[0], ctb[0], ct_zero, *st);
+
+  //cuProfilerStop();
+}
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
+
+  cudaEventElapsedTime(&et, start, stop);
+  cout<<"Elapsed: "<<et<<" ms"<<endl;
 
   // Decrypt
   cout<< "Decrypting"<<endl;
@@ -187,7 +173,8 @@ int main() {
     Decrypt(ptz[i], ctz[i], pri_key);
   }
 
-  cout<<"s ? B : A) = "<<int(dump_ptxt(ptz, N))<<endl;
+  cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
+  cout<<"Bits: "<< N << " Streams: " << ns <<endl;
 
   cudaEventElapsedTime(&et, start, stop);
   cout<<"Elapsed: "<<et<<" ms"<<endl;
@@ -195,6 +182,32 @@ int main() {
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
+
+  
+  // /////////////////////////////////////////////
+  // /////////////  MUX /////////////////////////
+  // //////////////////////////////////////////////
+  // cudaEventRecord(start, 0);
+
+  // Mux(ctz, cta, ctb, cts, st, N);
+  
+  // cudaEventRecord(stop, 0);
+  // cudaEventSynchronize(stop);
+
+  // // Decrypt
+  // cout<< "Decrypting"<<endl;
+  // for (int i = N-1; i >= 0; i--) {
+  //   Decrypt(ptz[i], ctz[i], pri_key);
+  // }
+
+  // cout<<"s ? B : A) = "<<int(dump_ptxt(ptz, N))<<endl;
+
+  // cudaEventElapsedTime(&et, start, stop);
+  // cout<<"Elapsed: "<<et<<" ms"<<endl;
+
+  // Decrypt(pta[0], ctc[N-1], pri_key);
+
+  // cout<<"carry out: "<<pta[0].message_<<endl;
   // /////////////////////////////////////////////
   //   ///////////// SUB ///////////////////////
   // /////////////////////////////////////////////
@@ -243,7 +256,7 @@ int main() {
 //   Decrypt(pta[0], ctc[N-1], pri_key);
 
 //   cout<<"carry out: "<<pta[0].message_<<endl;
-  
+
   delete [] pta;
   delete [] ptb;
   delete [] ptz;
