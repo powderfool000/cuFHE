@@ -54,7 +54,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 32;
+  uint8_t N = 4;
   uint8_t tests = 30;
   uint8_t ns = N;
 
@@ -212,56 +212,58 @@ int main() {
 //   cout<<"carry out: "<<pta[0].message_<<endl;
 
   
-  // /////////////////////////////////////////////
-  // /////////////  MUX /////////////////////////
-  // //////////////////////////////////////////////
-  // cudaEventRecord(start, 0);
-
-  // Mux(ctz, cta, ctb, cts, st, N);
+  /////////////////////////////////////////////
+  /////////////  MUX /////////////////////////
+  //////////////////////////////////////////////
+  cudaEventRecord(start, 0);
+for(int i=0; i< tests; i++){
+  Mux(ctz, cta, ctb, cts, st, N);
+}
   
-  // cudaEventRecord(stop, 0);
-  // cudaEventSynchronize(stop);
+  
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
 
-  // // Decrypt
-  // cout<< "Decrypting"<<endl;
-  // for (int i = N-1; i >= 0; i--) {
-  //   Decrypt(ptz[i], ctz[i], pri_key);
-  // }
+  // Decrypt
+  cout<< "Decrypting"<<endl;
+  for (int i = N-1; i >= 0; i--) {
+    Decrypt(ptz[i], ctz[i], pri_key);
+  }
 
-  // cout<<"s ? B : A) = "<<int(dump_ptxt(ptz, N))<<endl;
+  cout<<"s ? B : A) = "<<int(dump_ptxt(ptz, N))<<endl;
 
-  // cudaEventElapsedTime(&et, start, stop);
-  // cout<<"Elapsed: "<<et<<" ms"<<endl;
+  cudaEventElapsedTime(&et, start, stop);
+  cout<<"Elapsed: "<<et<<" ms"<<endl;
 
-  // Decrypt(pta[0], ctc[N-1], pri_key);
+  Decrypt(pta[0], ctc[N-1], pri_key);
 
-  // cout<<"carry out: "<<pta[0].message_<<endl;
+  cout<<"carry out: "<<pta[0].message_<<endl;
   /////////////////////////////////////////////
     ///////////// SUB ///////////////////////
   /////////////////////////////////////////////
-    cudaEventRecord(start, 0);
+//     cudaEventRecord(start, 0);
 
-for(int i=0; i< tests; i++){
-  Sub(ctz, ctc, cta, ctb, st, N);
-}
+// for(int i=0; i< tests; i++){
+//   Sub(ctz, ctc, cta, ctb, st, N);
+// }
     
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
+//     cudaEventRecord(stop, 0);
+//     cudaEventSynchronize(stop);
 
-    // Decrypt
-    cout<< "Decrypting"<<endl;
-    for (int i = N-1; i >= 0; i--) {
-      Decrypt(ptz[i], ctz[i], pri_key);
-    }
+//     // Decrypt
+//     cout<< "Decrypting"<<endl;
+//     for (int i = N-1; i >= 0; i--) {
+//       Decrypt(ptz[i], ctz[i], pri_key);
+//     }
 
-    cout<<"A - B = "<<int(dump_ptxt(ptz, N))<<endl;
+//     cout<<"A - B = "<<int(dump_ptxt(ptz, N))<<endl;
 
-    cudaEventElapsedTime(&et, start, stop);
-    cout<<"Elapsed: "<<et<<" ms"<<endl;
+//     cudaEventElapsedTime(&et, start, stop);
+//     cout<<"Elapsed: "<<et<<" ms"<<endl;
 
-    Decrypt(pta[0], ctc[N-1], pri_key);
+//     Decrypt(pta[0], ctc[N-1], pri_key);
 
-    cout<<"carry out: "<<pta[0].message_<<endl;
+//     cout<<"carry out: "<<pta[0].message_<<endl;
 //   //////////////////////////////////////////
 //   ///////////////// DIVIDE ////////////////////
 //   ///////////////////////////////////////////
