@@ -55,7 +55,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 
 int main() {
   uint8_t N = 4;
-  unit8_t tests = 5;
+  uint8_t tests = 5;
   uint8_t ns = N;
 
   SetSeed();  // set random seed
@@ -156,7 +156,7 @@ int main() {
 /////////////////////////////////////
   cout<< "Testing CSA 5 times" <<endl;
   cudaEventRecord(start, 0);
-for(i=0; i< tests; <i++;){
+for(int i=0; i< tests; <i++;){
   Add(ctz, ctc, cta, ctb, st, N);
 }
   cudaEventRecord(stop, 0);
