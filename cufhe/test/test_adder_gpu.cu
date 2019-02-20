@@ -156,7 +156,7 @@ int main() {
 /////////////////////////////////////
   cout<< "Testing CSA 5 times" <<endl;
   cudaEventRecord(start, 0);
-for(int i=0; i< tests; <i++){
+for(int i=0; i< tests; i++){
   Add(ctz, ctc, cta, ctb, st, N);
 }
   cudaEventRecord(stop, 0);
