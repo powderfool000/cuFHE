@@ -54,7 +54,7 @@ int8_t dump_ptxt(Ptxt* p, uint8_t n) {
 }
 
 int main() {
-  uint8_t N = 32;
+  uint8_t N = 4;
   uint8_t tests = 30;
   uint8_t ns = N;
 
@@ -125,40 +125,14 @@ int main() {
   //Visual profiler
   //cudaProfilerStart();
 
-// /////////////////////////////////////
-//   ///////// RCA ADD /////////////////////
-// /////////////////////////////////////
-//   cudaEventRecord(start, 0);
-
-//   Rca(ctz, ctc, cta, ctb, *st, N);
-
-//   cudaEventRecord(stop, 0);
-//   cudaEventSynchronize(stop);
-
-//   // Decrypt
-//   cout<< "Decrypting"<<endl;
-//   for (int i = N-1; i >= 0; i--) {
-//     Decrypt(ptz[i], ctz[i], pri_key);
-//   }
-
-//   cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
-//   cout<<"Bits: "<< N << " Streams: " << ns <<endl;
-
-//   cudaEventElapsedTime(&et, start, stop);
-//   cout<<"Elapsed: "<<et<<" ms"<<endl;
-
-//   Decrypt(pta[0], ctc[N-1], pri_key);
-
-//   cout<<"carry out: "<<pta[0].message_<<endl;
-
-  /////////////////////////////////////
-  ///////// CSA ADD /////////////////////
 /////////////////////////////////////
-  cout<< "Testing CSA 5 times" <<endl;
+  ///////// RCA ADD /////////////////////
+/////////////////////////////////////
   cudaEventRecord(start, 0);
 for(int i=0; i< tests; i++){
-  Add(ctz, ctc, cta, ctb, st, N);
+  Rca(ctz, ctc, cta, ctb, *st, N);
 }
+
   cudaEventRecord(stop, 0);
   cudaEventSynchronize(stop);
 
@@ -177,6 +151,33 @@ for(int i=0; i< tests; i++){
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
+
+//   /////////////////////////////////////
+//   ///////// CSA ADD /////////////////////
+// /////////////////////////////////////
+//   cout<< "Testing CSA 5 times" <<endl;
+//   cudaEventRecord(start, 0);
+// for(int i=0; i< tests; i++){
+//   Add(ctz, ctc, cta, ctb, st, N);
+// }
+//   cudaEventRecord(stop, 0);
+//   cudaEventSynchronize(stop);
+
+//   // Decrypt
+//   cout<< "Decrypting"<<endl;
+//   for (int i = N-1; i >= 0; i--) {
+//     Decrypt(ptz[i], ctz[i], pri_key);
+//   }
+
+//   cout<<"A + B = "<<int(dump_ptxt(ptz, N))<<endl;
+//   cout<<"Bits: "<< N << " Streams: " << ns <<endl;
+
+//   cudaEventElapsedTime(&et, start, stop);
+//   cout<<"Elapsed: "<<et<<" ms"<<endl;
+
+//   Decrypt(pta[0], ctc[N-1], pri_key);
+
+//   cout<<"carry out: "<<pta[0].message_<<endl;
 
   /////////////////////////////////////
   ///////// FA /////////////////////
