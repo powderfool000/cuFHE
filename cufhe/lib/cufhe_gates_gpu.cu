@@ -240,55 +240,60 @@ void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, Ctxt* t, Stream* st, uint8
   Csa(z, c, a, b, s, t, st, n);
 }
 
-// void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
-//   Ctxt t[n];
+// Requires 5n+1
+void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
+  for (uint8_t i = 0; i < n; i++) {
+    Not(t[i], b[i], st[i]);
+  }
 
-//   for (uint8_t i = 0; i < n; i++) {
-//     Not(t[i], b[i], st[i]);
-//   }
+  Add(z, c, a, t, &ct_one, t+n, st, n);
+}
 
-//   Add(z, c, a, t, &ct_one, st, n);
-// }
+void Mul(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
+}
 
-// void Mul(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
-// }
+// a / b = z
+// Requires
+void Div(Ctxt* z, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
+  Ctxt* r = t+4*n+1;      // non-restoring reg
+  Ctxt* s = r+n;      // 'working' index
+  Ctxt* t0 = r+2*n;
+  Ctxt* t1 = t0 + n;    // temp
+  Ctxt* c = t1 + n;    // carry
+  Ctxt* bi = c + n;   // bi = -b
 
-// // a / b = z
-// void Div(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n) {
-//   Ctxt r[2*n];      // non-restoring reg
-//   Ctxt* s = r+n;      // 'working' index
-//   Ctxt t0[n], t1[n];    // temp
-//   Ctxt c[n];    // carry
-//   Ctxt bi[n];   // bi = -b
+  // initialize
+  for (int i = 0; i < n; i++) {
+    Not(bi[i], b[i], st[i]);
+    Copy(s[i], ct_zero, st[i]);
+    Copy(r[i], a[i], st[i]);
+  }
 
-//   // initialize
-//   for (int i = 0; i < n; i++) {
-//     Not(bi[i], b[i], st[i]);
-//     Copy(s[i], ct_zero, st[i]);
-//     Copy(r[i], a[i], st[i]);
-//   }
+  Add(bi, c, bi, s, &ct_one, t, st, n);
 
-//   Add(bi, c, bi, s, &ct_one, st, n);
+  // first iteration is always subtract (add bi)
+  s--;
+  Add(t0, c, s, bi, t, st, n);
 
-//   // first iteration is always subtract (add bi)
-//   s--;
-//   Add(t0, c, s, bi, st, n);
+  Synchronize();
 
-//   for (int i = 0; i < n; i++) {
-//     Copy(s[i], t0[i], st[i]);
-//   }
+  for (int i = 0; i < n; i++) {
+    Copy(s[i], t0[i], st[i]);
+  }
 
-//   Not(z[s-r], s[n-1], st[0]);
+  Not(z[s-r], s[n-1], st[0]);
 
-//   while (s > r) {
-//     s--;
-//     Add(t0, c, s, bi, st, n);
-//     Add(t1, c, s, b, st, n);
+  Synchronize();
 
-//     Mux(s, t0, t1, s+n, st, n);
+  while (s > r) {
+    s--;
+    Add(t0, c, s, bi, t, st, n);
+    Add(t1, c, s, b, t, st, n);
 
-//     Not(z[s-r], s[n-1]);
-//   }
-// }
+    Mux(s, t0, t1, s+n, t, st, n);
+
+    Not(z[s-r], s[n-1]);
+  }
+}
 
 } // namespace cufhe
