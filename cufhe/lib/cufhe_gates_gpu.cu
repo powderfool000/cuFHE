@@ -43,15 +43,30 @@ inline void CtxtCopyH2D(const Ctxt& c, Stream st) {
                   c.lwe_sample_->SizeData(),
                   cudaMemcpyHostToDevice,
                   st.st());
+  cudaEventRecord(*((cudaEvent_t*)c.lock_), st.st());
 }
 
 inline void CtxtCopyD2H(const Ctxt& c, Stream st) {
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)c.lock_), 0);
   cudaMemcpyAsync(c.lwe_sample_->data(),
                   c.lwe_sample_device_->data(),
                   c.lwe_sample_->SizeData(),
                   cudaMemcpyDeviceToHost,
                   st.st());
   cudaEventRecord(*((cudaEvent_t*)c.lock_), st.st());
+}
+
+inline void CtxtCopyD2D(Ctxt& out,
+                        const Ctxt& in,
+                        Stream st) {
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaMemcpyAsync(out.lwe_sample_device_->data(),
+                  in.lwe_sample_device_->data(),
+                  in.lwe_sample_device_->SizeData(),
+                  cudaMemcpyDeviceToDevice,
+                  st.st());
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
 }
 
 void Nand(Ctxt& out,
@@ -62,6 +77,7 @@ void Nand(Ctxt& out,
   static const Torus fix = ModSwitchToTorus(1, 8);
   CtxtCopyH2D(in0, st);
   CtxtCopyH2D(in1, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
   NandBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
   CtxtCopyD2H(out, st);
@@ -75,6 +91,7 @@ void Or(Ctxt& out,
   static const Torus fix = ModSwitchToTorus(1, 8);
   CtxtCopyH2D(in0, st);
   CtxtCopyH2D(in1, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
   OrBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
   CtxtCopyD2H(out, st);
@@ -88,6 +105,7 @@ void And(Ctxt& out,
   static const Torus fix = ModSwitchToTorus(-1, 8);
   CtxtCopyH2D(in0, st);
   CtxtCopyH2D(in1, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
   AndBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
   CtxtCopyD2H(out, st);
@@ -101,6 +119,7 @@ void Nor(Ctxt& out,
   static const Torus fix = ModSwitchToTorus(-1, 8);
   CtxtCopyH2D(in0, st);
   CtxtCopyH2D(in1, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
   NorBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
   CtxtCopyD2H(out, st);
@@ -114,6 +133,7 @@ void Xor(Ctxt& out,
   static const Torus fix = ModSwitchToTorus(1, 4);
   CtxtCopyH2D(in0, st);
   CtxtCopyH2D(in1, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
   XorBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
   CtxtCopyD2H(out, st);
@@ -127,23 +147,37 @@ void Xnor(Ctxt& out,
   static const Torus fix = ModSwitchToTorus(-1, 4);
   CtxtCopyH2D(in0, st);
   CtxtCopyH2D(in1, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
   XnorBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
   CtxtCopyD2H(out, st);
 }
 
+__global__
+void __NotBootstrap__(Torus* out, Torus* in) {
+  #pragma unroll
+  for (int i = 0; i <= 500; i++) {
+    out[i] = -in[i];
+  }
+  __syncthreads();
+}
+
 void Not(Ctxt& out,
          const Ctxt& in,
          Stream st) {
-  for (int i = 0; i <= in.lwe_sample_->n(); i ++)
-    out.lwe_sample_->data()[i] = -in.lwe_sample_->data()[i];
+  CtxtCopyH2D(in, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  __NotBootstrap__<<<1, 1, 0, st.st()>>>(out.lwe_sample_device_->data(), in.lwe_sample_device_->data());
+  CtxtCopyD2H(out, st);
 }
 
 void Copy(Ctxt& out,
           const Ctxt& in,
           Stream st) {
-  for (int i = 0; i <= in.lwe_sample_->n(); i ++)
-    out.lwe_sample_->data()[i] = in.lwe_sample_->data()[i];
+  CtxtCopyH2D(in, st);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  CtxtCopyD2D(out, in, st);
+  CtxtCopyD2H(out, st);
 }
 
 void Ha(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, Stream& st) {
@@ -192,7 +226,7 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Ctxt* t, Stream* st, uint8_t n)
   }
 }
 
-// Requires 4n+1 temporary ctxts
+// Requires 2n + max(9, 2n+1) temporary ctxts
 void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
   // Ctxt t0[(n+1)/2], t1[(n+1)/2];
   // Ctxt c0[(n+1)/2], c1[(n+1)/2];
@@ -212,7 +246,7 @@ void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
   Mux(c+n/2, c0, c1, c+n/2-1, rcat, st, (n+1)/2);
 }
 
-// Requires 4n+1 temporary ctxts
+// Requires 2n + max(9, 2n+1) temporary ctxts
 void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream* st, uint8_t n) {
   // Ctxt t0[(n+1)/2], t1[(n+1)/2];
   // Ctxt c0[(n+1)/2], c1[(n+1)/2];
@@ -275,15 +309,11 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
   s--;
   Add(t0, c, s, bi, t, st, n);
 
-  Synchronize();
-
   for (int i = 0; i < n; i++) {
     Copy(s[i], t0[i], st[i]);
   }
 
   Not(z[s-r], s[n-1], st[0]);
-
-  Synchronize();
 
   while (s > r) {
     s--;
@@ -292,7 +322,7 @@ void Div(Ctxt* z, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
 
     Mux(s, t0, t1, s+n, t, st, n);
 
-    Not(z[s-r], s[n-1]);
+    Not(z[s-r], s[n-1], st[0]);
   }
 }
 
