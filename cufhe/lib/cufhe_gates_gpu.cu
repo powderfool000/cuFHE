@@ -37,36 +37,36 @@ void CleanUp() {
 }
 
 inline void CtxtCopyH2D(const Ctxt& c, Stream st) {
-  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)c.lock_), 0);
+  // cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)c.lock_), 0);
   cudaMemcpyAsync(c.lwe_sample_device_->data(),
                   c.lwe_sample_->data(),
                   c.lwe_sample_->SizeData(),
                   cudaMemcpyHostToDevice,
                   st.st());
-  cudaEventRecord(*((cudaEvent_t*)c.lock_), st.st());
+  // cudaEventRecord(*((cudaEvent_t*)c.lock_), st.st());
 }
 
 inline void CtxtCopyD2H(const Ctxt& c, Stream st) {
-  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)c.lock_), 0);
+  // cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)c.lock_), 0);
   cudaMemcpyAsync(c.lwe_sample_->data(),
                   c.lwe_sample_device_->data(),
                   c.lwe_sample_->SizeData(),
                   cudaMemcpyDeviceToHost,
                   st.st());
-  cudaEventRecord(*((cudaEvent_t*)c.lock_), st.st());
+  // cudaEventRecord(*((cudaEvent_t*)c.lock_), st.st());
 }
 
 inline void CtxtCopyD2D(Ctxt& out,
                         const Ctxt& in,
                         Stream st) {
-  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in.lock_), 0);
-  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  // cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in.lock_), 0);
+  // cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
   cudaMemcpyAsync(out.lwe_sample_device_->data(),
                   in.lwe_sample_device_->data(),
                   in.lwe_sample_device_->SizeData(),
                   cudaMemcpyDeviceToDevice,
                   st.st());
-  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
 }
 
 void Nand(Ctxt& out,
@@ -75,12 +75,15 @@ void Nand(Ctxt& out,
           Stream st) {
   static const Torus mu = ModSwitchToTorus(1, 8);
   static const Torus fix = ModSwitchToTorus(1, 8);
-  CtxtCopyH2D(in0, st);
-  CtxtCopyH2D(in1, st);
+  // CtxtCopyH2D(in0, st);
+  // CtxtCopyH2D(in1, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in0.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in1.lock_), 0);
   NandBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 void Or(Ctxt& out,
@@ -89,12 +92,15 @@ void Or(Ctxt& out,
         Stream st) {
   static const Torus mu = ModSwitchToTorus(1, 8);
   static const Torus fix = ModSwitchToTorus(1, 8);
-  CtxtCopyH2D(in0, st);
-  CtxtCopyH2D(in1, st);
+  // CtxtCopyH2D(in0, st);
+  // CtxtCopyH2D(in1, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in0.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in1.lock_), 0);
   OrBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 void And(Ctxt& out,
@@ -103,12 +109,15 @@ void And(Ctxt& out,
          Stream st) {
   static const Torus mu = ModSwitchToTorus(1, 8);
   static const Torus fix = ModSwitchToTorus(-1, 8);
-  CtxtCopyH2D(in0, st);
-  CtxtCopyH2D(in1, st);
+  // CtxtCopyH2D(in0, st);
+  // CtxtCopyH2D(in1, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in0.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in1.lock_), 0);
   AndBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 void Nor(Ctxt& out,
@@ -117,12 +126,15 @@ void Nor(Ctxt& out,
          Stream st) {
   static const Torus mu = ModSwitchToTorus(1, 8);
   static const Torus fix = ModSwitchToTorus(-1, 8);
-  CtxtCopyH2D(in0, st);
-  CtxtCopyH2D(in1, st);
+  // CtxtCopyH2D(in0, st);
+  // CtxtCopyH2D(in1, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in0.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in1.lock_), 0);
   NorBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 void Xor(Ctxt& out,
@@ -131,12 +143,15 @@ void Xor(Ctxt& out,
          Stream st) {
   static const Torus mu = ModSwitchToTorus(1, 8);
   static const Torus fix = ModSwitchToTorus(1, 4);
-  CtxtCopyH2D(in0, st);
-  CtxtCopyH2D(in1, st);
+  // CtxtCopyH2D(in0, st);
+  // CtxtCopyH2D(in1, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in0.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in1.lock_), 0);
   XorBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 void Xnor(Ctxt& out,
@@ -145,12 +160,15 @@ void Xnor(Ctxt& out,
           Stream st) {
   static const Torus mu = ModSwitchToTorus(1, 8);
   static const Torus fix = ModSwitchToTorus(-1, 4);
-  CtxtCopyH2D(in0, st);
-  CtxtCopyH2D(in1, st);
+  // CtxtCopyH2D(in0, st);
+  // CtxtCopyH2D(in1, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in0.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in1.lock_), 0);
   XnorBootstrap(out.lwe_sample_device_, in0.lwe_sample_device_,
       in1.lwe_sample_device_, mu, fix, st.st());
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 __global__
@@ -165,19 +183,23 @@ void __NotBootstrap__(Torus* out, Torus* in) {
 void Not(Ctxt& out,
          const Ctxt& in,
          Stream st) {
-  CtxtCopyH2D(in, st);
+  // CtxtCopyH2D(in, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in.lock_), 0);
   __NotBootstrap__<<<1, 1, 0, st.st()>>>(out.lwe_sample_device_->data(), in.lwe_sample_device_->data());
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 void Copy(Ctxt& out,
           const Ctxt& in,
           Stream st) {
-  CtxtCopyH2D(in, st);
+  // CtxtCopyH2D(in, st);
   cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)out.lock_), 0);
+  cudaStreamWaitEvent(st.st(), *((cudaEvent_t*)in.lock_), 0);
   CtxtCopyD2D(out, in, st);
-  CtxtCopyD2H(out, st);
+  cudaEventRecord(*((cudaEvent_t*)out.lock_), st.st());
+  // CtxtCopyD2H(out, st);
 }
 
 void Ha(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, Stream& st) {
@@ -195,20 +217,62 @@ void Fa(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, const Ctxt& ci, Ctxt* t
 }
 
 // Requires 3 temporary ctxts
-void Rca(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream& st, uint8_t n) {
-  Ha(z[0], c[0], a[0], b[0], st);
+void Rca(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns) {
+  // Ha(z[0], c[0], a[0], b[0], st);
+
+  // for (uint8_t i = 1; i < n; i++) {
+  //   Fa(z[i], c[i], a[i], b[i], c[i-1], t, st);
+  // }
+  uint stn = 2;
+
+  // for (int i = 0; i < n; i++) {
+  //   CtxtCopyH2D(a[i], st[i%ns]);
+  //   CtxtCopyH2D(b[i], st[i%ns]);
+  // }
+
+  Xor(z[0], a[0], b[0], st[0]);
+  And(c[0], a[0], b[0], st[1%ns]);
 
   for (uint8_t i = 1; i < n; i++) {
-    Fa(z[i], c[i], a[i], b[i], c[i-1], t, st);
+    Xor(t[0], a[i], b[i], st[(stn++)%ns]);
+    And(t[1], a[i], b[i], st[(stn++)%ns]);
+    And(t[2], c[i-1], t[0], st[(stn++)%ns]);
+    Xor(z[i], c[i-1], t[0], st[(stn++)%ns]);
+    Or(c[i], t[1], t[2], st[(stn++)%ns]);
   }
 }
 
 // Requires 3 temporary ctxts
-void Rca(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream& st, uint8_t n) {
-  Fa(z[0], co[0], a[0], b[0], *ci, t, st);
+void Rca(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream* st, uint8_t n, uint8_t ns) {
+  // Fa(z[0], co[0], a[0], b[0], *ci, t, st);
+
+  // for (uint8_t i = 1; i < n; i++) {
+  //   Fa(z[i], co[i], a[i], b[i], co[i-1], t, st);
+  // }
+  uint stn = 5;
+
+  // for (int i = 0; i < n; i++) {
+  //   CtxtCopyH2D(a[i], st[i%ns]);
+  //   CtxtCopyH2D(b[i], st[i%ns]);
+  // }
+
+  // CtxtCopyH2D(*ci, st[0]);
+
+  Xor(t[0], a[0], b[0], st[0]);
+  And(t[1], a[0], b[0], st[1%ns]);
+  And(t[2], *ci, t[0], st[2%ns]);
+  Xor(z[0], *ci, t[0], st[3%ns]);
+  Or(co[0], t[1], t[2], st[4%ns]);
+
+  // And(z[0], a[0], b[0], st[0]);
+  // Xor(co[0], a[0], b[0], st[1%ns]);
 
   for (uint8_t i = 1; i < n; i++) {
-    Fa(z[i], co[i], a[i], b[i], co[i-1], t, st);
+    Xor(t[0], a[i], b[i], st[(stn++)%ns]);
+    And(t[1], a[i], b[i], st[stn++%ns]);
+    And(t[2], co[i-1], t[0], st[(stn++)%ns]);
+    Xor(z[i], co[i-1], t[0], st[(stn++)%ns]);
+    Or(co[i], t[1], t[2], st[(stn++)%ns]);
   }
 }
 
@@ -237,13 +301,27 @@ void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
   Ctxt* c1 = c0+(n+1)/2;
   Ctxt* rcat = c0+n;
 
-  Rca(z, c, a, b, rcat, st[0], n/2);
+  for (int i = 0; i < n; i++) {
+    CtxtCopyH2D(a[i], st[i%n]);
+    CtxtCopyH2D(b[i], st[i%n]);
+  }
 
-  Rca(t0, c0, a+n/2, b+n/2, rcat+3, st[1], (n+1)/2);
-  Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st[2], (n+1)/2);
+  CtxtCopyH2D(ct_one, st[0]);
+
+  Rca(z, c, a, b, rcat, st, n/2, 2);
+
+  Rca(t0, c0, a+n/2, b+n/2, rcat+3, st+2, (n+1)/2, 2);
+  Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st+4, (n+1)/2, 2);
+
+  // Synchronize();
 
   Mux(z+n/2, t0, t1, c+n/2-1, rcat, st, (n+1)/2);
-  Mux(c+n/2, c0, c1, c+n/2-1, rcat, st, (n+1)/2);
+  Mux(c+n/2, c0, c1, c+n/2-1, rcat, st+n/2, (n+1)/2);
+
+  for (int i = 0; i < n; i++) {
+    CtxtCopyD2H(z[i], st[i%n]);
+    CtxtCopyD2H(c[i], st[i%n]);
+  }
 }
 
 // Requires 2n + max(9, 2n+1) temporary ctxts
@@ -257,20 +335,35 @@ void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream* st, uin
   Ctxt* c1 = c0+(n+1)/2;
   Ctxt* rcat = c0+n;
 
-  Rca(z, co, a, b, ci, rcat, st[0], n/2);
+  for (int i = 0; i < n; i++) {
+    CtxtCopyH2D(a[i], st[i%n]);
+    CtxtCopyH2D(b[i], st[i%n]);
+  }
 
-  Rca(t0, c0, a+n/2, b+n/2, rcat+3, st[1], (n+1)/2);
-  Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st[2], (n+1)/2);
+  CtxtCopyH2D(ct_one, st[0]);
+  CtxtCopyH2D(*ci, st[1]);
+
+  Rca(z, co, a, b, ci, rcat, st, n/2, 2);
+
+  Rca(t0, c0, a+n/2, b+n/2, rcat+3, st+2, (n+1)/2, 2);
+  Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st+4, (n+1)/2, 2);
 
   Mux(z+n/2, t0, t1, co+n/2-1, rcat, st, (n+1)/2);
-  Mux(co+n/2, c0, c1, co+n/2-1, rcat, st, (n+1)/2);
+  Mux(co+n/2, c0, c1, co+n/2-1, rcat, st+n/2, (n+1)/2);
+
+  for (int i = 0; i < n; i++) {
+    CtxtCopyD2H(z[i], st[i%n]);
+    CtxtCopyD2H(co[i], st[i%n]);
+  }
 }
 
 void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n) {
+  // Rca(z, c, a, b, t, st, n, 3);
   Csa(z, c, a, b, t, st, n);
 }
 
 void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, Ctxt* t, Stream* st, uint8_t n) {
+  // Rca(z, c, a, b, s, t, st, n, 3);
   Csa(z, c, a, b, s, t, st, n);
 }
 
