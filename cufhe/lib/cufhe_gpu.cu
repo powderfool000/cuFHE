@@ -35,8 +35,12 @@ Ctxt::Ctxt(bool is_alias) {
   lwe_sample_device_ = new LWESample(param->lwe_n_);
 
   pair = EventAllocator::New();
-  lock_ = pair.first;
-  lock_deleter_ = pair.second;
+  rlock_ = pair.first;
+  rlock_deleter_ = pair.second;
+
+  pair = EventAllocator::New();
+  wlock_ = pair.first;
+  wlock_deleter_ = pair.second;
 
   if (is_alias) {
     lwe_sample_->set_data(nullptr);

@@ -301,12 +301,20 @@ Ctxt::~Ctxt() {
     lwe_sample_device_ = nullptr;
   }
 
-  if(lock_ != nullptr)
+  if(rlock_ != nullptr)
   {
-    lock_deleter_(lock_);
-    lock_deleter_ = nullptr;
-    delete lock_;
-    lock_ = nullptr;
+    rlock_deleter_(rlock_);
+    rlock_deleter_ = nullptr;
+    delete rlock_;
+    rlock_ = nullptr;
+  }
+
+  if(wlock_ != nullptr)
+  {
+    wlock_deleter_(wlock_);
+    wlock_deleter_ = nullptr;
+    delete wlock_;
+    wlock_ = nullptr;
   }
 }
 

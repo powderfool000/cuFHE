@@ -113,8 +113,10 @@ struct Ctxt {
   MemoryDeleter lwe_sample_deleter_;
   LWESample* lwe_sample_device_;
   MemoryDeleter lwe_sample_device_deleter_;
-  void* lock_;
-  MemoryDeleter lock_deleter_;
+  void* rlock_;
+  MemoryDeleter rlock_deleter_;
+  void* wlock_;
+  MemoryDeleter wlock_deleter_;
 };
 
 /** Plaintext is in {0, 1}. */
