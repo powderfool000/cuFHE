@@ -69,6 +69,20 @@ private:
   cudaStream_t st_;
 }; // class Stream
 
+class StreamList {
+public:
+  inline StreamList(uint n = 1):n_(n), o_(0) { this->st_ = new Stream[n]; }
+  inline ~StreamList() { if (st_ != nullptr) { this->Destroy(); delete [] st_; st_ = nullptr; } }
+  inline void Create() { for (int i = 0; i < n_; i++) this->st_[i].Create(); }
+  inline void Destroy() { for (int i = 0; i < n_; i++) this->st_[i].Destroy(); }
+  inline Stream operator[](uint i) { return st_[(i+o_)%n_]; }
+  inline void Rotate(uint n) { o_ = (o_ + n) % n_; };
+private:
+  uint n_;
+  uint o_; // offset
+  Stream* st_;
+};
+
 void And (Ctxt& out, const Ctxt& in0, const Ctxt& in1, Stream st = 0);
 void Or  (Ctxt& out, const Ctxt& in0, const Ctxt& in1, Stream st = 0);
 void Nand(Ctxt& out, const Ctxt& in0, const Ctxt& in1, Stream st = 0);
@@ -77,11 +91,11 @@ void Xor (Ctxt& out, const Ctxt& in0, const Ctxt& in1, Stream st = 0);
 void Xnor(Ctxt& out, const Ctxt& in0, const Ctxt& in1, Stream st = 0);
 void Not (Ctxt& out, const Ctxt& in, Stream st = 0);
 void Copy(Ctxt& out, const Ctxt& in, Stream st = 0);
-void Add (Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true);
-void Add (Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true);
-void Mux (Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true);
-void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true);
-void Div(Ctxt* z, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true);
+void Add (Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, StreamList& st, uint8_t n, bool memcpy = true);
+void Add (Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, StreamList& st, uint8_t n, bool memcpy = true);
+void Mux (Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Ctxt* t, StreamList& st, uint8_t n, bool memcpy = true);
+// void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true);
+// void Div(Ctxt* z, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true);
 // Not Ready...
 // void Mux(Ctxt& out, const Ctxt& in0, const Ctxt& in1, const Ctxt& in2,
 //          cudaStream_t st = 0);

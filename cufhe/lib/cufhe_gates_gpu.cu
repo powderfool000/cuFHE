@@ -230,104 +230,101 @@ void Copy(Ctxt& out,
   // CtxtCopyD2H(out, st);
 }
 
-void Ha(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, Stream& st, bool memcpy = true) {
-  Xor(z, a, b, st);
-  And(co, a, b, st);
+void Ha(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, StreamList& st, bool memcpy = true) {
+  Xor(z, a, b, st[0]);
+  And(co, a, b, st[1]);
+  st.Rotate(2);
 }
 
 // Requires 3 temporary ctxts
-void Fa(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, const Ctxt& ci, Ctxt* t, Stream& st, bool memcpy = true) {
-  Xor(t[0], a, b, st);
-  And(t[1], a, b, st);
-  And(t[2], ci, t[0], st);
-  Xor(z, ci, t[0], st);
-  Or(co, t[1], t[2], st);
+void Fa(Ctxt& z, Ctxt& co, const Ctxt& a, const Ctxt& b, const Ctxt& ci, Ctxt* t, StreamList& st, bool memcpy = true) {
+  Xor(t[0], a, b, st[0]);
+  And(t[1], a, b, st[1]);
+  And(t[2], ci, t[0], st[2]);
+  Xor(z, ci, t[0], st[3]);
+  Or(co, t[1], t[2], st[4]);
+  st.Rotate(5);
 }
 
 // Requires 3 temporary ctxts
-void Rca(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true) {
-  // Ha(z[0], c[0], a[0], b[0], st);
-
-  // for (uint8_t i = 1; i < n; i++) {
-  //   Fa(z[i], c[i], a[i], b[i], c[i-1], t, st);
-  // }
-  uint stn = 2;
-
+void Rca(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, StreamList& st, uint8_t n, bool memcpy = true) {
   if (memcpy) {
     for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
+      CtxtCopyH2D(a[i], st[i]);
+      CtxtCopyH2D(b[i], st[i+n]);
     }
   }
 
-  Xor(z[0], a[0], b[0], st[0]);
-  And(c[0], a[0], b[0], st[1%ns]);
+  Ha(z[0], c[0], a[0], b[0], st);
 
   for (uint8_t i = 1; i < n; i++) {
-    Xor(t[0], a[i], b[i], st[(stn++)%ns]);
-    And(t[1], a[i], b[i], st[(stn++)%ns]);
-    And(t[2], c[i-1], t[0], st[(stn++)%ns]);
-    Xor(z[i], c[i-1], t[0], st[(stn++)%ns]);
-    Or(c[i], t[1], t[2], st[(stn++)%ns]);
+    Fa(z[i], c[i], a[i], b[i], c[i-1], t, st);
   }
+
+  // Xor(z[0], a[0], b[0], st[0]);
+  // And(c[0], a[0], b[0], st[1%ns]);
+
+  // for (uint8_t i = 1; i < n; i++) {
+  //   Xor(t[0], a[i], b[i], st[(stn++)%ns]);
+  //   And(t[1], a[i], b[i], st[(stn++)%ns]);
+  //   And(t[2], c[i-1], t[0], st[(stn++)%ns]);
+  //   Xor(z[i], c[i-1], t[0], st[(stn++)%ns]);
+  //   Or(c[i], t[1], t[2], st[(stn++)%ns]);
+  // }
 
   if (memcpy) {
     for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-      CtxtCopyD2H(c[i], st[(i+n)%ns]);
+      CtxtCopyD2H(z[i], st[i]);
+      CtxtCopyD2H(c[i], st[i+n]);
     }
   }
 }
 
 // Requires 3 temporary ctxts
-void Rca(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true) {
-  // Fa(z[0], co[0], a[0], b[0], *ci, t, st);
-
-  // for (uint8_t i = 1; i < n; i++) {
-  //   Fa(z[i], co[i], a[i], b[i], co[i-1], t, st);
-  // }
-  uint stn = 5;
-
+void Rca(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, StreamList& st, uint8_t n, bool memcpy = true) {
   if (memcpy) {
     for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
+      CtxtCopyH2D(a[i], st[i]);
+      CtxtCopyH2D(b[i], st[i+n]);
     }
 
     CtxtCopyH2D(*ci, st[0]);
   }
 
-  Xor(t[0], a[0], b[0], st[0]);
-  And(t[1], a[0], b[0], st[1%ns]);
-  And(t[2], *ci, t[0], st[2%ns]);
-  Xor(z[0], *ci, t[0], st[3%ns]);
-  Or(co[0], t[1], t[2], st[4%ns]);
-
-  // And(z[0], a[0], b[0], st[0]);
-  // Xor(co[0], a[0], b[0], st[1%ns]);
+  Fa(z[0], co[0], a[0], b[0], *ci, t, st);
 
   for (uint8_t i = 1; i < n; i++) {
-    Xor(t[0], a[i], b[i], st[(stn++)%ns]);
-    And(t[1], a[i], b[i], st[stn++%ns]);
-    And(t[2], co[i-1], t[0], st[(stn++)%ns]);
-    Xor(z[i], co[i-1], t[0], st[(stn++)%ns]);
-    Or(co[i], t[1], t[2], st[(stn++)%ns]);
+    Fa(z[i], co[i], a[i], b[i], co[i-1], t, st);
   }
+
+  // Xor(t[0], a[0], b[0], st[0]);
+  // And(t[1], a[0], b[0], st[1%ns]);
+  // And(t[2], *ci, t[0], st[2%ns]);
+  // Xor(z[0], *ci, t[0], st[3%ns]);
+  // Or(co[0], t[1], t[2], st[4%ns]);
+
+  // for (uint8_t i = 1; i < n; i++) {
+  //   Xor(t[0], a[i], b[i], st[(stn++)%ns]);
+  //   And(t[1], a[i], b[i], st[stn++%ns]);
+  //   And(t[2], co[i-1], t[0], st[(stn++)%ns]);
+  //   Xor(z[i], co[i-1], t[0], st[(stn++)%ns]);
+  //   Or(co[i], t[1], t[2], st[(stn++)%ns]);
+  // }
 
   if (memcpy) {
     for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-      CtxtCopyD2H(co[i], st[(i+n)%ns]);
+      CtxtCopyD2H(z[i], st[i]);
+      CtxtCopyD2H(co[i], st[i+n]);
     }
   }
 }
 
 // Requires 2n+1 temporary ctxts
-void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
+void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Ctxt* t, StreamList& st, uint8_t n, bool memcpy) {
   if (memcpy) {
     for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(in0[i], st[i%ns]);
-      CtxtCopyH2D(in1[i], st[(i+n)%ns]);
+      CtxtCopyH2D(in0[i], st[i]);
+      CtxtCopyH2D(in1[i], st[i+n]);
     }
 
     CtxtCopyH2D(*s, st[0]);
@@ -336,237 +333,237 @@ void Mux(Ctxt* z, Ctxt* in0, Ctxt* in1, Ctxt* s, Ctxt* t, Stream* st, uint8_t n,
   Not(t[0], *s, st[0]);
 
   for (uint8_t i = 0; i < n; i++) {
-    And(t[i+1], in0[i], t[0], st[i%ns]);
-    And(t[n+i+1], in1[i], *s, st[(i+n)%ns]);
+    And(t[i+1], in0[i], t[0], st[i]);
+    And(t[n+i+1], in1[i], *s, st[i+n]);
   }
 
   for (uint8_t i = 0; i < n; i++) {
-    Or(z[i], t[i+1], t[n+i+1], st[i%ns]);
+    Or(z[i], t[i+1], t[n+i+1], st[i]);
   }
 
   if (memcpy) {
     for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
+      CtxtCopyD2H(z[i], st[i]);
     }
   }
 }
 
-// Requires 2n + max(9, 4n+2) temporary ctxts
-void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true) {
-  // Ctxt t0[(n+1)/2], t1[(n+1)/2];
-  // Ctxt c0[(n+1)/2], c1[(n+1)/2];
+// // Requires 2n + max(9, 4n+2) temporary ctxts
+// void Csa(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true) {
+//   // Ctxt t0[(n+1)/2], t1[(n+1)/2];
+//   // Ctxt c0[(n+1)/2], c1[(n+1)/2];
 
-  Ctxt* t0 = t;
-  Ctxt* t1 = t+(n+1)/2;
-  Ctxt* c0 = t+n;
-  Ctxt* c1 = c0+(n+1)/2;
-  Ctxt* rcat = c0+n;
+//   Ctxt* t0 = t;
+//   Ctxt* t1 = t+(n+1)/2;
+//   Ctxt* c0 = t+n;
+//   Ctxt* c1 = c0+(n+1)/2;
+//   Ctxt* rcat = c0+n;
 
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
-    }
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyH2D(a[i], st[i%ns]);
+//       CtxtCopyH2D(b[i], st[(i+n)%ns]);
+//     }
 
-    CtxtCopyH2D(ct_one, st[0]);
-  }
+//     CtxtCopyH2D(ct_one, st[0]);
+//   }
 
-  Rca(z, c, a, b, rcat, st, n/2, 2, false);
+//   Rca(z, c, a, b, rcat, st, n/2, 2, false);
 
-  Rca(t0, c0, a+n/2, b+n/2, rcat+3, st+2, (n+1)/2, 2, false);
-  Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st+4, (n+1)/2, 2, false);
+//   Rca(t0, c0, a+n/2, b+n/2, rcat+3, st+2, (n+1)/2, 2, false);
+//   Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st+4, (n+1)/2, 2, false);
 
-  // Synchronize();
+//   // Synchronize();
 
-  Mux(z+n/2, t0, t1, c+n/2-1, rcat, st, (n+1)/2, ns, false);
-  Mux(c+n/2, c0, c1, c+n/2-1, rcat, st, (n+1)/2, ns, false);
+//   Mux(z+n/2, t0, t1, c+n/2-1, rcat, st, (n+1)/2, ns, false);
+//   Mux(c+n/2, c0, c1, c+n/2-1, rcat, st, (n+1)/2, ns, false);
 
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-      CtxtCopyD2H(c[i], st[(i+n)%ns]);
-    }
-  }
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyD2H(z[i], st[i%ns]);
+//       CtxtCopyD2H(c[i], st[(i+n)%ns]);
+//     }
+//   }
+// }
+
+// // Requires 2n + max(9, 2n+1) temporary ctxts
+// void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true) {
+//   // Ctxt t0[(n+1)/2], t1[(n+1)/2];
+//   // Ctxt c0[(n+1)/2], c1[(n+1)/2];
+
+//   Ctxt* t0 = t;
+//   Ctxt* t1 = t+(n+1)/2;
+//   Ctxt* c0 = t+n;
+//   Ctxt* c1 = c0+(n+1)/2;
+//   Ctxt* rcat = c0+n;
+
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyH2D(a[i], st[i%ns]);
+//       CtxtCopyH2D(b[i], st[(i+n)%ns]);
+//     }
+
+//     CtxtCopyH2D(ct_one, st[0]);
+//     CtxtCopyH2D(*ci, st[1]);
+//   }
+
+//   Rca(z, co, a, b, ci, rcat, st, n/2, 2, false);
+
+//   Rca(t0, c0, a+n/2, b+n/2, rcat+3, st+2, (n+1)/2, 2, false);
+//   Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st+4, (n+1)/2, 2, false);
+
+//   Mux(z+n/2, t0, t1, co+n/2-1, rcat, st, (n+1)/2, ns, false);
+//   Mux(co+n/2, c0, c1, co+n/2-1, rcat, st, (n+1)/2, ns, false);
+
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyD2H(z[i], st[i%ns]);
+//       CtxtCopyD2H(co[i], st[(i+n)%ns]);
+//     }
+//   }
+// }
+
+void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, StreamList& st, uint8_t n, bool memcpy) {
+  // if (memcpy) {
+  //   for (int i = 0; i < n; i++) {
+  //     CtxtCopyH2D(a[i], st[i%ns]);
+  //     CtxtCopyH2D(b[i], st[(i+n)%ns]);
+  //   }
+
+  //   CtxtCopyH2D(ct_one, st[0]);
+  // }
+
+  Rca(z, c, a, b, t, st, n);
+  // Csa(z, c, a, b, t, st, n, ns, false);
+
+  // if (memcpy) {
+  //   for (int i = 0; i < n; i++) {
+  //     CtxtCopyD2H(z[i], st[i%ns]);
+  //     CtxtCopyD2H(c[i], st[(i+n)%ns]);
+  //   }
+  // }
 }
 
-// Requires 2n + max(9, 2n+1) temporary ctxts
-void Csa(Ctxt* z, Ctxt* co, Ctxt* a, Ctxt* b, Ctxt* ci, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy = true) {
-  // Ctxt t0[(n+1)/2], t1[(n+1)/2];
-  // Ctxt c0[(n+1)/2], c1[(n+1)/2];
+void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, Ctxt* t, StreamList& st, uint8_t n, bool memcpy) {
+  // if (memcpy) {
+  //   for (int i = 0; i < n; i++) {
+  //     CtxtCopyH2D(a[i], st[i%ns]);
+  //     CtxtCopyH2D(b[i], st[(i+n)%ns]);
+  //   }
 
-  Ctxt* t0 = t;
-  Ctxt* t1 = t+(n+1)/2;
-  Ctxt* c0 = t+n;
-  Ctxt* c1 = c0+(n+1)/2;
-  Ctxt* rcat = c0+n;
+  //   CtxtCopyH2D(ct_one, st[0]);
+  //   CtxtCopyH2D(*s, st[1]);
+  // }
 
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
-    }
+  Rca(z, c, a, b, s, t, st, n);
+  // Csa(z, c, a, b, s, t, st, n, ns, false);
 
-    CtxtCopyH2D(ct_one, st[0]);
-    CtxtCopyH2D(*ci, st[1]);
-  }
-
-  Rca(z, co, a, b, ci, rcat, st, n/2, 2, false);
-
-  Rca(t0, c0, a+n/2, b+n/2, rcat+3, st+2, (n+1)/2, 2, false);
-  Rca(t1, c1, a+n/2, b+n/2, &ct_one, rcat+6, st+4, (n+1)/2, 2, false);
-
-  Mux(z+n/2, t0, t1, co+n/2-1, rcat, st, (n+1)/2, ns, false);
-  Mux(co+n/2, c0, c1, co+n/2-1, rcat, st, (n+1)/2, ns, false);
-
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-      CtxtCopyD2H(co[i], st[(i+n)%ns]);
-    }
-  }
+  // if (memcpy) {
+  //   for (int i = 0; i < n; i++) {
+  //     CtxtCopyD2H(z[i], st[i%ns]);
+  //     CtxtCopyD2H(c[i], st[(i+n)%ns]);
+  //   }
+  // }
 }
 
-void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
-    }
+// // Requires 5n+1
+// void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyH2D(a[i], st[i%ns]);
+//       CtxtCopyH2D(b[i], st[(i+n)%ns]);
+//     }
 
-    CtxtCopyH2D(ct_one, st[0]);
-  }
+//     CtxtCopyH2D(ct_one, st[0]);
+//   }
 
-  // Rca(z, c, a, b, t, st, n, ns);
-  Csa(z, c, a, b, t, st, n, ns, false);
+//   for (uint8_t i = 0; i < n; i++) {
+//     Not(t[i], b[i], st[i%ns]);
+//   }
 
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-      CtxtCopyD2H(c[i], st[(i+n)%ns]);
-    }
-  }
-}
+//   Add(z, c, a, t, &ct_one, t+n, st, n, ns, false);
 
-void Add(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* s, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
-    }
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyD2H(z[i], st[i%ns]);
+//       CtxtCopyD2H(c[i], st[(i+n)%ns]);
+//     }
+//   }
+// }
 
-    CtxtCopyH2D(ct_one, st[0]);
-    CtxtCopyH2D(*s, st[1]);
-  }
+// void Mul(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
+// }
 
-  // Rca(z, c, a, b, s, t, st, n, ns);
-  Csa(z, c, a, b, s, t, st, n, ns, false);
+// // a / b = z
+// // Requires
+// void Div(Ctxt* z, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
+//   Ctxt* r = t+4*n+1;      // non-restoring reg
+//   Ctxt* s = r+n;      // 'working' index
+//   Ctxt* t0 = r+2*n;
+//   Ctxt* t1 = t0 + n;    // temp
+//   Ctxt* c = t1 + n;    // carry
+//   Ctxt* bi = c + n;   // bi = -b
 
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-      CtxtCopyD2H(c[i], st[(i+n)%ns]);
-    }
-  }
-}
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyH2D(a[i], st[i%ns]);
+//       CtxtCopyH2D(b[i], st[(i+n)%ns]);
+//     }
 
-// Requires 5n+1
-void Sub(Ctxt* z, Ctxt* c, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
-    }
+//     CtxtCopyH2D(ct_zero, st[0]);
+//     CtxtCopyH2D(ct_one, st[1%ns]);
+//   }
 
-    CtxtCopyH2D(ct_one, st[0]);
-  }
+//   Synchronize();
 
-  for (uint8_t i = 0; i < n; i++) {
-    Not(t[i], b[i], st[i%ns]);
-  }
+//   // initialize
+//   for (int i = 0; i < n; i++) {
+//     Not(bi[i], b[i], st[i%ns]);
+//     Copy(s[i], ct_zero, st[(i+n)%ns]);
+//     Copy(r[i], a[i], st[(i+2*n)%ns]);
+//   }
 
-  Add(z, c, a, t, &ct_one, t+n, st, n, ns, false);
+//   // Synchronize();
 
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-      CtxtCopyD2H(c[i], st[(i+n)%ns]);
-    }
-  }
-}
+//   Add(bi, c, bi, s, &ct_one, t, st, n, ns, false);
 
-void Mul(Ctxt* z, Ctxt* a, Ctxt* b, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
-}
+//   // Synchronize();
 
-// a / b = z
-// Requires
-void Div(Ctxt* z, Ctxt* a, Ctxt* b, Ctxt* t, Stream* st, uint8_t n, uint8_t ns, bool memcpy) {
-  Ctxt* r = t+4*n+1;      // non-restoring reg
-  Ctxt* s = r+n;      // 'working' index
-  Ctxt* t0 = r+2*n;
-  Ctxt* t1 = t0 + n;    // temp
-  Ctxt* c = t1 + n;    // carry
-  Ctxt* bi = c + n;   // bi = -b
+//   // first iteration is always subtract (add bi)
+//   s--;
+//   Add(t0, c, s, bi, t, st, n, ns, false);
 
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyH2D(a[i], st[i%ns]);
-      CtxtCopyH2D(b[i], st[(i+n)%ns]);
-    }
+//   // Synchronize();
 
-    CtxtCopyH2D(ct_zero, st[0]);
-    CtxtCopyH2D(ct_one, st[1%ns]);
-  }
+//   for (int i = 0; i < n; i++) {
+//     Copy(s[i], t0[i], st[i%ns]);
+//   }
 
-  Synchronize();
+//   // Synchronize();
 
-  // initialize
-  for (int i = 0; i < n; i++) {
-    Not(bi[i], b[i], st[i%ns]);
-    Copy(s[i], ct_zero, st[(i+n)%ns]);
-    Copy(r[i], a[i], st[(i+2*n)%ns]);
-  }
+//   Not(z[s-r], s[n-1], st[0]);
 
-  // Synchronize();
+//   // Synchronize();
 
-  Add(bi, c, bi, s, &ct_one, t, st, n, ns, false);
+//   while (s > r) {
+//     s--;
+//     Add(t0, c, s, bi, t, st, n, ns, false);
+//     // Synchronize();
+//     Add(t1, c, s, b, t, st, n, ns, false);
+//     // Synchronize();
+//     Mux(s, t0, t1, s+n, t, st, n, ns, false);
+//     // Synchronize();
+//     Not(z[s-r], s[n-1], st[0]);
+//     // Synchronize();
+//   }
 
-  // Synchronize();
+//   Synchronize();
 
-  // first iteration is always subtract (add bi)
-  s--;
-  Add(t0, c, s, bi, t, st, n, ns, false);
-
-  // Synchronize();
-
-  for (int i = 0; i < n; i++) {
-    Copy(s[i], t0[i], st[i%ns]);
-  }
-
-  // Synchronize();
-
-  Not(z[s-r], s[n-1], st[0]);
-
-  // Synchronize();
-
-  while (s > r) {
-    s--;
-    Add(t0, c, s, bi, t, st, n, ns, false);
-    // Synchronize();
-    Add(t1, c, s, b, t, st, n, ns, false);
-    // Synchronize();
-    Mux(s, t0, t1, s+n, t, st, n, ns, false);
-    // Synchronize();
-    Not(z[s-r], s[n-1], st[0]);
-    // Synchronize();
-  }
-
-  Synchronize();
-
-  if (memcpy) {
-    for (int i = 0; i < n; i++) {
-      CtxtCopyD2H(z[i], st[i%ns]);
-    }
-  }
-}
+//   if (memcpy) {
+//     for (int i = 0; i < n; i++) {
+//       CtxtCopyD2H(z[i], st[i%ns]);
+//     }
+//   }
+// }
 
 } // namespace cufhe
