@@ -40,6 +40,7 @@ void init_ptxt(Ptxt* p, int8_t x, uint8_t n) {
   }
 }
 
+//Dumps the integer to binary
 int8_t dump_ptxt(Ptxt* p, uint8_t n) {
   int8_t out = 0;
 
@@ -142,7 +143,9 @@ int main() {
   cout<<"Elapsed: "<<et<<" ms"<<endl;
 
   Decrypt(pta[0], ctc[N-1], pri_key);
-
+  
+  //end of ADD
+  
   // cout<<"carry out: "<<pta[0].message_<<endl;
   
   cudaEventRecord(start, 0);
@@ -168,6 +171,8 @@ int main() {
 
   cout<<"carry out: "<<pta[0].message_<<endl;
   
+  //end of Multiply
+  
   cudaEventRecord(start, 0);
 
   Sub(ctz, ctc, cta, ctb, ctt, st, N);
@@ -190,6 +195,8 @@ int main() {
   Decrypt(pta[0], ctc[N-1], pri_key);
 
   cout<<"carry out: "<<pta[0].message_<<endl;
+  
+  //end of Subtract
   
   cudaEventRecord(start, 0);
 
@@ -214,6 +221,8 @@ int main() {
 
   cout<<"carry out: "<<pta[0].message_<<endl;
 
+  //end of Division
+  
   cudaProfilerStop();
   
   delete [] pta;
